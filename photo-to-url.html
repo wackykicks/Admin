@@ -7,6 +7,19 @@
     <!-- Include FontAwesome for icons -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <style>
+        /* Ensure body can scroll fully and extend to full height */
+html, body {
+    height: 100%;
+    min-height: 100%;
+    overflow-x: hidden;
+}
+
+/* Adjust the body layout to allow scrolling */
+body {
+    display: block;  /* Remove flex so it scrolls normally */
+    padding-bottom: 80px; /* Extra space for bottom nav on mobile */
+}
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #f7faff;
@@ -76,6 +89,7 @@
             flex-wrap: wrap;
             gap: 20px;
             justify-content: center;
+            padding-bottom: 50px; /* extra space */
         }
 
         .image-card {
@@ -229,9 +243,38 @@
     .sidebar {
         display: none;
     }
-
     .bottom-nav {
         display: flex !important;
+    }
+    body {
+        padding-bottom: 80px; /* Ensure content is not hidden behind bottom nav */
+    }
+}
+
+@media (max-width: 600px) {
+    .copy-btn {
+        font-size: 1rem;
+        padding: 10px 16px;
+    }
+    .upload-box {
+        padding: 20px 8px;
+        width: 98%;
+        max-width: 98vw;
+    }
+    h2 {
+        font-size: 1.3rem;
+    }
+    .custom-file-label {
+        font-size: 0.95rem;
+        padding: 10px 16px;
+    }
+    #output {
+        gap: 10px;
+        padding-bottom: 70px; /* extra space for bottom nav */
+    }
+    .image-card {
+        max-width: 98vw;
+        padding: 10px;
     }
 }
     </style>
@@ -249,7 +292,7 @@
 
 <!-- BOTTOM NAV (Mobile) -->
 <nav class="bottom-nav">
-    <a href="index.html" id="bottom-admin"><i class="fa-solid fa-user-tie"></i></a>
+    <a href="admin.html" id="bottom-admin"><i class="fa-solid fa-user-tie"></i></a>
     <a href="photo-to-url.html" id="bottom-converter"><i class="fa-solid fa-link"></i></a>
 </nav>
 
