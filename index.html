@@ -247,8 +247,12 @@
     </div>
 
     <div class="form-group">
-        <label>Price</label>
-        <input type="text" id="productPrice">
+        <label>Old Price (MRP)</label>
+        <input type="text" id="productOldPrice" placeholder="Eg: 2999">
+    </div>
+    <div class="form-group">
+        <label>New Price (Selling Price)</label>
+        <input type="text" id="productNewPrice" placeholder="Eg: 1999">
     </div>
 
     <div class="form-group">
@@ -260,6 +264,11 @@
     <div class="form-group">
         <label>Tag (optional)</label>
         <input type="text" id="productTag">
+    </div>
+
+    <div class="form-group">
+        <label>Description</label>
+        <textarea id="productDescription" placeholder="Enter product description"></textarea>
     </div>
 
     <div id="imageInputs">
@@ -295,11 +304,13 @@ const db = getFirestore(app);
 
 // Form references
 const nameInput = document.getElementById("productName");
-const priceInput = document.getElementById("productPrice");
+const oldPriceInput = document.getElementById("productOldPrice");
+const newPriceInput = document.getElementById("productNewPrice");
 const tagInput = document.getElementById("productTag");
 const imageInputsContainer = document.getElementById("imageInputs");
 const productList = document.getElementById("productList");
 const sizesInput = document.getElementById("productSizes");
+const descriptionInput = document.getElementById("productDescription");
 
 let editMode = false;
 let editingProductId = null;
@@ -315,7 +326,8 @@ window.addImageInput = () => {
 // Reset form
 function resetForm() {
     nameInput.value = "";
-    priceInput.value = "";
+    oldPriceInput.value = "";
+    newPriceInput.value = "";
     tagInput.value = "";
     sizesInput.value = ""; // <-- Reset the sizes input
     imageInputsContainer.innerHTML = `<div class="form-group"><input type="text" class="image-url" placeholder="Image URL"></div>`;
@@ -353,24 +365,27 @@ async function loadProducts() {
 // Submit product (add or update)
 window.submitProduct = async () => {
     const name = nameInput.value.trim();
-    const price = priceInput.value.trim();
+    const oldPrice = oldPriceInput.value.trim();
+    const newPrice = newPriceInput.value.trim();
+    const price = newPrice; // <-- Add this line
     const tag = tagInput.value.trim();
     const imgUrl = Array.from(document.querySelectorAll(".image-url"))
         .map(input => input.value.trim())
         .filter(url => url);
     const sizes = sizesInput.value.split(",").map(s => s.trim()).filter(s => s);
+    const description = descriptionInput.value.trim();
 
-    if (!name || !price || imgUrl.length === 0) {
-        alert("Name, Price, and at least one Image URL are required.");
+    if (!name || !oldPrice || !newPrice || imgUrl.length === 0) {
+        alert("Name, Old Price, New Price, and at least one Image URL are required.");
         return;
     }
 
     try {
         if (editMode && editingProductId) {
-            await updateDoc(doc(db, "products", editingProductId), { name, price, tag, imgUrl, sizes });
+            await updateDoc(doc(db, "products", editingProductId), { name, price, oldPrice, newPrice, tag, imgUrl, sizes, description });
             alert("Product updated successfully!");
         } else {
-            await addDoc(collection(db, "products"), { name, price, tag, imgUrl, sizes });
+            await addDoc(collection(db, "products"), { name, price, oldPrice, newPrice, tag, imgUrl, sizes, description });
             alert("Product added successfully!");
         }
     } catch (err) {
@@ -405,9 +420,11 @@ window.editProduct = async (id) => {
 
     const product = docSnap.data();
     nameInput.value = product.name;
-    priceInput.value = product.price;
+    oldPriceInput.value = product.oldPrice || ""; // Set old price
+    newPriceInput.value = product.newPrice || ""; // Set new price
     tagInput.value = product.tag || "";
     sizesInput.value = (product.sizes || []).join(", ");
+    descriptionInput.value = product.description || "";
 
     // Populate image fields
     imageInputsContainer.innerHTML = "";
