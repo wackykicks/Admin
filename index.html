@@ -227,7 +227,7 @@
 <nav class="sidebar">
     <div class="sidebar-logo">NSS Admin</div>
     <ul class="sidebar-links">
-        <li><a href="index.html" id="nav-admin"><i class="fa-solid fa-user-tie"></i> Dashboard</a></li>
+        <li><a href="admin.html" id="nav-admin"><i class="fa-solid fa-user-tie"></i> Dashboard</a></li>
         <li><a href="photo-to-url.html" id="nav-converter"><i class="fa-solid fa-link"></i> Image Converter</a></li>
     </ul>
 </nav>
@@ -271,15 +271,11 @@
         <textarea id="productDescription" placeholder="Enter product description"></textarea>
     </div>
 
-    <div id="imageInputs">
-        <div class="form-group">
-            <label>Image URL</label>
-            <input type="text" class="image-url">
-        </div>
-    </div>
-
-    <button class="add-image-btn" onclick="addImageInput()">+ Add another image</button>
-
+    <div class="form-group">
+    <label>Image URLs (comma separated)</label>
+    <input type="text" id="multiImageInput" placeholder="Eg: https://url1.jpg, https://url2.jpg">
+</div>
+    
     <button class="submit-btn" onclick="submitProduct()">Add Product</button>
 
     <div class="product-list" id="productList">Loading...</div>
@@ -329,8 +325,9 @@ function resetForm() {
     oldPriceInput.value = "";
     newPriceInput.value = "";
     tagInput.value = "";
-    sizesInput.value = ""; // <-- Reset the sizes input
-    imageInputsContainer.innerHTML = `<div class="form-group"><input type="text" class="image-url" placeholder="Image URL"></div>`;
+    sizesInput.value = "";
+    descriptionInput.value = "";
+    document.getElementById("multiImageInput").value = "";
     editMode = false;
     editingProductId = null;
     document.querySelector(".submit-btn").innerText = "Add Product";
@@ -367,10 +364,11 @@ window.submitProduct = async () => {
     const name = nameInput.value.trim();
     const oldPrice = oldPriceInput.value.trim();
     const newPrice = newPriceInput.value.trim();
-    const price = newPrice; // <-- Add this line
+    const price = newPrice;
     const tag = tagInput.value.trim();
-    const imgUrl = Array.from(document.querySelectorAll(".image-url"))
-        .map(input => input.value.trim())
+    const imgUrl = document.getElementById("multiImageInput").value
+        .split(',')
+        .map(url => url.trim())
         .filter(url => url);
     const sizes = sizesInput.value.split(",").map(s => s.trim()).filter(s => s);
     const description = descriptionInput.value.trim();
@@ -420,22 +418,15 @@ window.editProduct = async (id) => {
 
     const product = docSnap.data();
     nameInput.value = product.name;
-    oldPriceInput.value = product.oldPrice || ""; // Set old price
-    newPriceInput.value = product.newPrice || ""; // Set new price
+    oldPriceInput.value = product.oldPrice || "";
+    newPriceInput.value = product.newPrice || "";
     tagInput.value = product.tag || "";
     sizesInput.value = (product.sizes || []).join(", ");
     descriptionInput.value = product.description || "";
 
-    // Populate image fields
-    imageInputsContainer.innerHTML = "";
-    product.imgUrl.forEach(url => {
-        const div = document.createElement("div");
-        div.className = "form-group";
-        div.innerHTML = `<input type="text" class="image-url" placeholder="Image URL" value="${url}">`;
-        imageInputsContainer.appendChild(div);
-    });
+    // Set comma separated image URLs
+    document.getElementById("multiImageInput").value = (product.imgUrl || []).join(', ');
 
-    // Switch to edit mode
     editMode = true;
     editingProductId = id;
     document.querySelector(".submit-btn").innerText = "Update Product";
