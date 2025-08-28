@@ -310,11 +310,13 @@ body {
 
 <!-- Add this button just above your <div id="output"></div> -->
 <button onclick="copyAllUrls()" id="copyAllBtn" style="display:none;">Copy All URLs</button>
+<button onclick="toggleRearrange()" id="rearrangeBtn" style="display:none;">Rearrange Photos</button>
 
-<div id="output"></div>
+<div id="output" class="rearrangeable"></div>
 
 <script>
     let uploadedUrls = [];
+    let rearrangeMode = false;
 
     function updateFileLabel() {
         const input = document.getElementById('imageInput');
@@ -336,6 +338,7 @@ body {
         const apiKey = '6c06c886cd6678ed6b6aef4c033f66b0'; // Replace with your ImgBB API key
         const output = document.getElementById('output');
         uploadedUrls = []; // Reset previous uploads
+        output.innerHTML = ''; // Clear previous cards
 
         for (let file of files) {
             const reader = new FileReader();
@@ -352,14 +355,19 @@ body {
                     if (data.success) {
                         const url = data.data.url;
                         uploadedUrls.push(url);
-                        output.innerHTML += `
-                            <div class="image-card">
-                                <img src="${url}" alt="Uploaded Image">
-                                <p>${url}</p>
-                                <button class="copy-btn" onclick="navigator.clipboard.writeText('${url}')">Copy URL</button>
-                            </div>
+                        const card = document.createElement('div');
+                        card.className = 'image-card';
+                        card.draggable = rearrangeMode;
+                        card.innerHTML = `
+                            <img src="${url}" alt="Uploaded Image">
+                            <p>${url}</p>
+                            <button class="copy-btn" onclick="navigator.clipboard.writeText('${url}')">Copy URL</button>
                         `;
+                        card.setAttribute('data-url', url);
+                        output.appendChild(card);
                         document.getElementById('copyAllBtn').style.display = 'inline-block';
+                        document.getElementById('rearrangeBtn').style.display = 'inline-block';
+                        if (rearrangeMode) enableDragAndDrop();
                     } else {
                         alert('Upload failed: ' + (data.error?.message || 'Unknown error'));
                     }
@@ -372,13 +380,68 @@ body {
     }
 
     function copyAllUrls() {
-        if (!uploadedUrls.length) return;
-        const allLinks = uploadedUrls.join(', ');
+        // Get URLs in current order
+        const cards = document.querySelectorAll('.image-card');
+        const orderedUrls = Array.from(cards).map(card => card.getAttribute('data-url'));
+        if (!orderedUrls.length) return;
+        const allLinks = orderedUrls.join(', ');
         navigator.clipboard.writeText(allLinks).then(() => {
             alert('All URLs copied to clipboard (comma separated)!');
         }).catch(err => {
             alert('Failed to copy: ' + err.message);
         });
+    }
+
+    function toggleRearrange() {
+        rearrangeMode = !rearrangeMode;
+        document.getElementById('rearrangeBtn').textContent = rearrangeMode ? "Done Rearranging" : "Rearrange Photos";
+        enableDragAndDrop();
+    }
+
+    function enableDragAndDrop() {
+        const cards = document.querySelectorAll('.image-card');
+        cards.forEach(card => {
+            card.draggable = rearrangeMode;
+            if (rearrangeMode) {
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragover', handleDragOver);
+                card.addEventListener('drop', handleDrop);
+                card.style.cursor = 'grab';
+            } else {
+                card.removeEventListener('dragstart', handleDragStart);
+                card.removeEventListener('dragover', handleDragOver);
+                card.removeEventListener('drop', handleDrop);
+                card.style.cursor = 'default';
+            }
+        });
+    }
+
+    let draggedCard = null;
+
+    function handleDragStart(e) {
+        draggedCard = this;
+        e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        if (draggedCard && draggedCard !== this) {
+            const output = document.getElementById('output');
+            const cards = Array.from(output.children);
+            const draggedIndex = cards.indexOf(draggedCard);
+            const targetIndex = cards.indexOf(this);
+
+            if (draggedIndex < targetIndex) {
+                output.insertBefore(draggedCard, this.nextSibling);
+            } else {
+                output.insertBefore(draggedCard, this);
+            }
+        }
     }
 
     // Nav highlighting
@@ -392,5 +455,35 @@ body {
     }
 </script>
 
-</body>
-</html>
+<style>
+/* ...existing styles... */
+.image-card[draggable="true"] {
+    border: 2px dashed #7f4fff;
+    cursor: grab;
+    opacity: 0.95;
+}
+.image-card.dragging {
+    opacity: 0.5;
+}
+#rearrangeBtn {
+    margin-left: 10px;
+    background: #f0f4ff;
+    color: #5c3dff;
+    border: 2px solid #bdbfff;
+    border-radius: 30px;
+    padding: 10px 22px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 10px;
+    margin-top: 10px;
+    transition: background 0.3s, color 0.3s, border 0.3s;
+}
+#rearrangeBtn:hover {
+    background: #e0e7ff;
+    color: #6741ff;
+    border-color: #7f4fff;
+}
+</style>
+
+<!
