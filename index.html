@@ -224,6 +224,13 @@
 <body>
 
 <!-- SIDEBAR NAV (Desktop) -->
+<nav class="sidebar">
+    <div class="sidebar-logo">NSS Admin</div>
+    <ul class="sidebar-links">
+        <li><a href="index.html" id="nav-admin"><i class="fa-solid fa-user-tie"></i> Dashboard</a></li>
+        <li><a href="photo-to-url.html" id="nav-converter"><i class="fa-solid fa-link"></i> Image Converter</a></li>
+    </ul>
+</nav>
 
 <!-- BOTTOM NAV (Mobile) -->
 <nav class="bottom-nav">
@@ -268,6 +275,11 @@
     <label>Image URLs (comma separated)</label>
     <input type="text" id="multiImageInput" placeholder="Eg: https://url1.jpg, https://url2.jpg">
 </div>
+
+<div class="form-group">
+    <label for="mainPhotoInput"><b>Main Product Photo URL</b></label>
+    <input type="text" id="mainPhotoInput" placeholder="Paste main product image URL here">
+</div>
     
     <button class="submit-btn" onclick="submitProduct()">Add Product</button>
 
@@ -296,21 +308,14 @@ const nameInput = document.getElementById("productName");
 const oldPriceInput = document.getElementById("productOldPrice");
 const newPriceInput = document.getElementById("productNewPrice");
 const tagInput = document.getElementById("productTag");
-const imageInputsContainer = document.getElementById("imageInputs");
 const productList = document.getElementById("productList");
 const sizesInput = document.getElementById("productSizes");
 const descriptionInput = document.getElementById("productDescription");
+const mainPhotoInput = document.getElementById("mainPhotoInput");
+const multiImageInput = document.getElementById("multiImageInput");
 
 let editMode = false;
 let editingProductId = null;
-
-// Add image input dynamically
-window.addImageInput = () => {
-    const div = document.createElement("div");
-    div.className = "form-group";
-    div.innerHTML = `<input type="text" class="image-url" placeholder="Image URL">`;
-    imageInputsContainer.appendChild(div);
-};
 
 // Reset form
 function resetForm() {
@@ -320,13 +325,14 @@ function resetForm() {
     tagInput.value = "";
     sizesInput.value = "";
     descriptionInput.value = "";
-    document.getElementById("multiImageInput").value = "";
+    mainPhotoInput.value = "";
+    multiImageInput.value = "";
     editMode = false;
     editingProductId = null;
     document.querySelector(".submit-btn").innerText = "Add Product";
 }
 
-// Load products
+// Load products (main photo only)
 async function loadProducts() {
     productList.innerHTML = "Loading...";
     const snapshot = await getDocs(collection(db, "products"));
@@ -334,14 +340,14 @@ async function loadProducts() {
 
     snapshot.forEach(docSnap => {
         const product = docSnap.data();
-        const firstImage = product.imgUrl[0] || "";
+        const mainImg = product.mainPhoto || ""; // Always use mainPhoto
 
         const card = document.createElement("div");
         card.className = "product-card";
         card.innerHTML = `
-            <img src="${firstImage}" alt="Product Image">
+            <img src="${mainImg}" alt="Main Product Photo">
             <h3>${product.name}</h3>
-            <p>₹${product.price}</p>
+            <p>₹${product.newPrice || product.oldPrice || ""}</p>
             <p>${product.tag || ""}</p>
             <div class="actions">
                 <button class="edit-btn" onclick="editProduct('${docSnap.id}')">Edit</button>
@@ -352,31 +358,37 @@ async function loadProducts() {
     });
 }
 
-// Submit product (add or update)
+// Submit product (main photo required, other images optional)
 window.submitProduct = async () => {
-    const name = nameInput.value.trim();
-    const oldPrice = oldPriceInput.value.trim();
-    const newPrice = newPriceInput.value.trim();
-    const price = newPrice;
-    const tag = tagInput.value.trim();
-    const imgUrl = document.getElementById("multiImageInput").value
-        .split(',')
-        .map(url => url.trim())
-        .filter(url => url);
-    const sizes = sizesInput.value.split(",").map(s => s.trim()).filter(s => s);
-    const description = descriptionInput.value.trim();
-
-    if (!name || !oldPrice || !newPrice || imgUrl.length === 0) {
-        alert("Name, Old Price, New Price, and at least one Image URL are required.");
+    const mainPhoto = mainPhotoInput.value.trim();
+    if (!mainPhoto) {
+        alert("Main product photo is required.");
         return;
     }
 
+    // Optional: collect additional images from comma separated input
+    const imageUrls = multiImageInput.value
+        .split(',')
+        .map(url => url.trim())
+        .filter(url => url);
+
+    const productData = {
+        name: nameInput.value.trim(),
+        oldPrice: oldPriceInput.value.trim(),
+        newPrice: newPriceInput.value.trim(),
+        tag: tagInput.value.trim(),
+        mainPhoto: mainPhoto, // required
+        imgUrl: imageUrls,    // optional
+        sizes: sizesInput.value.split(',').map(s => s.trim()).filter(s => s),
+        description: descriptionInput.value.trim(),
+    };
+
     try {
         if (editMode && editingProductId) {
-            await updateDoc(doc(db, "products", editingProductId), { name, price, oldPrice, newPrice, tag, imgUrl, sizes, description });
+            await updateDoc(doc(db, "products", editingProductId), productData);
             alert("Product updated successfully!");
         } else {
-            await addDoc(collection(db, "products"), { name, price, oldPrice, newPrice, tag, imgUrl, sizes, description });
+            await addDoc(collection(db, "products"), productData);
             alert("Product added successfully!");
         }
     } catch (err) {
@@ -399,7 +411,7 @@ window.deleteProduct = async (id) => {
     }
 };
 
-// Edit product
+// Edit product (main photo and other fields)
 window.editProduct = async (id) => {
     const docRef = doc(db, "products", id);
     const docSnap = await getDoc(docRef);
@@ -410,15 +422,14 @@ window.editProduct = async (id) => {
     }
 
     const product = docSnap.data();
-    nameInput.value = product.name;
+    nameInput.value = product.name || "";
     oldPriceInput.value = product.oldPrice || "";
     newPriceInput.value = product.newPrice || "";
     tagInput.value = product.tag || "";
     sizesInput.value = (product.sizes || []).join(", ");
     descriptionInput.value = product.description || "";
-
-    // Set comma separated image URLs
-    document.getElementById("multiImageInput").value = (product.imgUrl || []).join(', ');
+    mainPhotoInput.value = product.mainPhoto || "";
+    multiImageInput.value = (product.imgUrl || []).join(', ');
 
     editMode = true;
     editingProductId = id;
@@ -429,12 +440,12 @@ window.editProduct = async (id) => {
 loadProducts();
 
 // Highlight active link
-    const path = window.location.pathname;
-    if (path.includes("admin.html")) {
-        document.getElementById("nav-admin").classList.add("active");
-    } else if (path.includes("photo-to-url.html")) {
-        document.getElementById("nav-converter").classList.add("active");
-    }
+const path = window.location.pathname;
+if (path.includes("admin.html")) {
+    document.getElementById("nav-admin").classList.add("active");
+} else if (path.includes("photo-to-url.html")) {
+    document.getElementById("nav-converter").classList.add("active");
+}
 </script>
 
 
