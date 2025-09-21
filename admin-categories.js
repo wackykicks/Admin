@@ -8,83 +8,125 @@ class AdminCategoryManager {
     }
 
     async init() {
+        console.log('=== ADMIN CATEGORY MANAGER INIT ===');
+        
         try {
-            console.log('Initializing Admin Category Manager...');
             console.log('Firebase db available:', typeof db !== 'undefined');
             console.log('CategoryManager available:', typeof categoryManager !== 'undefined');
             
-            // Test Firebase connection
+            // Test Firebase connection first
             if (typeof db !== 'undefined') {
                 try {
-                    const testQuery = await db.collection('categories').limit(1).get();
-                    console.log('Firebase connection test successful');
+                    console.log('Testing Firebase connection...');
+                    const testQuery = await db.collection('category').limit(1).get();
+                    console.log('Firebase connection successful, docs found:', testQuery.size);
                 } catch (firebaseError) {
-                    console.error('Firebase connection test failed:', firebaseError);
+                    console.error('Firebase connection failed:', firebaseError);
+                    throw new Error('Firebase connection failed: ' + firebaseError.message);
                 }
+            } else {
+                console.warn('Firebase not available, will use fallback data');
             }
             
+            console.log('Loading categories...');
             await this.loadCategories();
+            console.log('Categories loaded:', this.categories.length);
+            
+            console.log('Loading products...');
             await this.loadProducts();
+            console.log('Products loaded:', this.products.length);
+            
+            console.log('Setting up event listeners...');
             this.setupEventListeners();
+            
+            console.log('Rendering categories table...');
             this.renderCategoriesTable();
+            
+            console.log('Rendering products list...');
             this.renderProductsList();
+            
+            console.log('Rendering category checkboxes...');
             this.renderCategoryCheckboxes();
             
-            console.log('Admin Category Manager initialized successfully');
-            console.log('Loaded categories:', this.categories.length);
-            console.log('Loaded products:', this.products.length);
+            // Clear any existing error messages on successful load
+            const existingMessage = document.querySelector('.message');
+            if (existingMessage) {
+                existingMessage.remove();
+                console.log('Cleared existing error message');
+            }
+            
+            console.log('✅ Admin Category Manager initialized successfully');
+            console.log('Final state - Categories:', this.categories.length, 'Products:', this.products.length);
+            
         } catch (error) {
-            console.error('Error initializing admin:', error);
-            this.showMessage('Error loading data. Please refresh the page.', 'error');
+            console.error('❌ Error during initialization:', error);
+            console.error('Error stack:', error.stack);
+            this.showMessage('Error loading data: ' + error.message + '. Please refresh the page.', 'error');
         }
+        
+        console.log('=== END ADMIN INIT ===');
     }
 
     async loadCategories() {
+        console.log('=== LOADING CATEGORIES ===');
+        
         try {
-            console.log('Loading categories...');
-            
-            // Method 1: Wait for categoryManager to be available and load categories
-            if (typeof categoryManager !== 'undefined') {
-                console.log('Using categoryManager to load categories');
-                await categoryManager.loadCategories();
-                this.categories = categoryManager.getCategories();
-            } 
-            // Method 2: Fallback - directly load from Firebase if categoryManager is not available
-            else if (typeof db !== 'undefined') {
-                console.log('Using direct Firebase to load categories');
-                const categoriesSnapshot = await db.collection('categories').get();
-                this.categories = categoriesSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-            } 
-            // Method 3: Local storage fallback
-            else {
-                console.log('Using local storage for categories');
-                const localCategories = JSON.parse(localStorage.getItem('categories') || '[]');
-                if (localCategories.length > 0) {
-                    this.categories = localCategories;
-                } else {
-                    this.categories = this.getDefaultCategories();
-                }
+            // Try direct Firebase first
+            if (typeof db !== 'undefined') {
+                console.log('Attempting to load from Firebase category collection...');
+                const categoriesSnapshot = await db.collection('category').get();
+                console.log('Firebase query result - size:', categoriesSnapshot.size);
+                
+                this.categories = categoriesSnapshot.docs.map(doc => {
+                    const rawData = doc.data();
+                    const data = { 
+                        id: doc.id, 
+                        name: rawData.name || 'Unnamed Category',
+                        image: rawData.image || rawData.icon || '',
+                        color: rawData.color || '#667eea',
+                        description: rawData.description || '',
+                        ...rawData
+                    };
+                    console.log('Loaded category:', data.name, 'with image:', data.image);
+                    return data;
+                });
+                
+                console.log('Successfully loaded from Firebase:', this.categories.length, 'categories');
+            } else {
+                console.log('Firebase not available, using default categories');
+                this.categories = this.getDefaultCategories();
             }
             
-            console.log('Loaded categories:', this.categories.length);
+            // If no categories loaded, use defaults
+            if (this.categories.length === 0) {
+                console.log('No categories found in Firebase, using default categories');
+                this.categories = this.getDefaultCategories();
+            }
+            
+            console.log('Final categories count:', this.categories.length);
+            this.categories.forEach((cat, index) => {
+                console.log(`Category ${index + 1}:`, cat.name, '| Image:', cat.image || 'none');
+            });
+            
         } catch (error) {
-            console.error('Error loading categories:', error);
+            console.error('Error loading categories from Firebase:', error);
+            console.error('Error details:', error.message);
+            console.log('Falling back to default categories');
             this.categories = this.getDefaultCategories();
         }
+        
+        console.log('=== END LOADING CATEGORIES ===');
     }
 
     // Get default categories for fallback
     getDefaultCategories() {
         return [
-            { id: 'all', name: 'All Products', icon: '🏠', color: '#667eea' },
-            { id: 'nike', name: 'Nike', icon: '✓', color: '#000000' },
-            { id: 'adidas', name: 'Adidas', icon: '⚡', color: '#0066cc' },
-            { id: 'shoes', name: 'Shoes', icon: '👟', color: '#ff6b35' },
-            { id: 'watches', name: 'Watches', icon: '⌚', color: '#28a745' },
-            { id: 'accessories', name: 'Accessories', icon: '🎒', color: '#6f42c1' }
+            { id: 'all', name: 'All Products', image: 'https://via.placeholder.com/60x60?text=ALL', color: '#667eea' },
+            { id: 'nike', name: 'Nike', image: 'https://via.placeholder.com/60x60?text=NIKE', color: '#000000' },
+            { id: 'adidas', name: 'Adidas', image: 'https://via.placeholder.com/60x60?text=ADIDAS', color: '#0066cc' },
+            { id: 'shoes', name: 'Shoes', image: 'https://via.placeholder.com/60x60?text=SHOES', color: '#ff6b35' },
+            { id: 'watches', name: 'Watches', image: 'https://via.placeholder.com/60x60?text=WATCH', color: '#28a745' },
+            { id: 'accessories', name: 'Accessories', image: 'https://via.placeholder.com/60x60?text=ACC', color: '#6f42c1' }
         ];
     }
 
@@ -159,7 +201,7 @@ class AdminCategoryManager {
         const formData = new FormData(e.target);
         const categoryData = {
             name: formData.get('name').trim(),
-            icon: formData.get('icon').trim(),
+            image: formData.get('image').trim(),
             color: formData.get('color'),
             description: formData.get('description').trim() || '',
             createdAt: new Date().toISOString(),
@@ -169,7 +211,7 @@ class AdminCategoryManager {
         console.log('Category data to add:', categoryData);
 
         // Validation
-        if (!categoryData.name || !categoryData.icon) {
+        if (!categoryData.name || !categoryData.image) {
             console.log('Validation failed - missing required fields');
             this.showMessage('Please fill in all required fields.', 'error');
             return;
@@ -191,9 +233,9 @@ class AdminCategoryManager {
             // Method 2: Try direct Firebase
             else if (typeof db !== 'undefined') {
                 console.log('Using direct Firebase add');
-                const docRef = await db.collection('categories').add({
+                const docRef = await db.collection('category').add({
                     name: categoryData.name,
-                    icon: categoryData.icon,
+                    image: categoryData.image,
                     color: categoryData.color,
                     description: categoryData.description,
                     createdAt: categoryData.createdAt
@@ -243,7 +285,7 @@ class AdminCategoryManager {
         
         const updateData = {
             name: formData.get('name').trim(),
-            icon: formData.get('icon').trim(),
+            image: formData.get('image').trim(),
             color: formData.get('color'),
             description: formData.get('description').trim() || '',
             updatedAt: new Date().toISOString()
@@ -261,7 +303,7 @@ class AdminCategoryManager {
             } else if (typeof db !== 'undefined') {
                 // Direct Firebase call
                 console.log('Using direct Firebase update');
-                await db.collection('categories').doc(categoryId).update(updateData);
+                await db.collection('category').doc(categoryId).update(updateData);
                 success = true;
                 console.log('Firebase update completed');
             } else {
@@ -294,17 +336,25 @@ class AdminCategoryManager {
             <tr data-category-id="${category.id}">
                 <td>
                     <div class="category-preview">
-                        <div class="category-preview-icon" style="background-color: ${category.color}">
-                            ${category.icon}
+                        <div class="category-preview-image" style="background-color: ${category.color || '#667eea'}">
+                            <img src="${category.image || category.icon || 'https://via.placeholder.com/40x40?text=' + (category.name ? category.name.charAt(0) : 'C')}" 
+                                 alt="${category.name || 'Category'}" 
+                                 style="width: 30px; height: 30px; border-radius: 6px; object-fit: cover;"
+                                 onerror="this.src='https://via.placeholder.com/40x40?text=' + '${category.name ? category.name.charAt(0) : 'C'}'">
                         </div>
-                        <span class="category-preview-name">${category.name}</span>
+                        <span class="category-preview-name">${category.name || 'Unnamed Category'}</span>
                     </div>
                 </td>
-                <td><strong>${category.name}</strong></td>
-                <td style="font-size: 1.2rem;">${category.icon}</td>
+                <td><strong>${category.name || 'Unnamed Category'}</strong></td>
                 <td>
-                    <div class="color-preview" style="background-color: ${category.color}"></div>
-                    <small style="display: block; margin-top: 4px;">${category.color}</small>
+                    <img src="${category.image || category.icon || 'https://via.placeholder.com/40x40?text=' + (category.name ? category.name.charAt(0) : 'C')}" 
+                         alt="${category.name || 'Category'}" 
+                         style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover;"
+                         onerror="this.src='https://via.placeholder.com/40x40?text=' + '${category.name ? category.name.charAt(0) : 'C'}'">
+                </td>
+                <td>
+                    <div class="color-preview" style="background-color: ${category.color || '#667eea'}"></div>
+                    <small style="display: block; margin-top: 4px;">${category.color || '#667eea'}</small>
                 </td>
                 <td>
                     <span class="badge">${this.getProductCountForCategory(category.id)} products</span>
@@ -314,7 +364,7 @@ class AdminCategoryManager {
                         <button class="action-btn btn-warning" onclick="adminCategoryManager.editCategory('${category.id}')">
                             <i class="fas fa-edit"></i> Edit
                         </button>
-                        <button class="action-btn btn-danger" onclick="adminCategoryManager.deleteCategory('${category.id}', '${category.name}')">
+                        <button class="action-btn btn-danger" onclick="adminCategoryManager.deleteCategory('${category.id}', '${category.name || 'Unnamed Category'}')">
                             <i class="fas fa-trash"></i> Delete
                         </button>
                     </div>
@@ -344,8 +394,13 @@ class AdminCategoryManager {
         container.innerHTML = this.categories.map(category => `
             <div class="category-checkbox">
                 <input type="checkbox" id="cat_${category.id}" value="${category.id}">
-                <span class="category-checkbox-icon" style="color: ${category.color}">${category.icon}</span>
-                <label for="cat_${category.id}" class="category-checkbox-name">${category.name}</label>
+                <span class="category-checkbox-icon" style="color: ${category.color || '#667eea'}">
+                    <img src="${category.image || category.icon || 'https://via.placeholder.com/20x20?text=' + (category.name ? category.name.charAt(0) : 'C')}" 
+                         alt="${category.name || 'Category'}" 
+                         style="width: 20px; height: 20px; border-radius: 4px; object-fit: cover;"
+                         onerror="this.src='https://via.placeholder.com/20x20?text=' + '${category.name ? category.name.charAt(0) : 'C'}'">
+                </span>
+                <label for="cat_${category.id}" class="category-checkbox-name">${category.name || 'Unnamed Category'}</label>
             </div>
         `).join('');
     }
@@ -371,7 +426,7 @@ class AdminCategoryManager {
         // Populate edit form
         document.getElementById('editCategoryId').value = category.id;
         document.getElementById('editCategoryName').value = category.name;
-        document.getElementById('editCategoryIcon').value = category.icon;
+        document.getElementById('editCategoryImage').value = category.image || category.icon || '';
         document.getElementById('editCategoryColor').value = category.color;
         document.getElementById('editCategoryDescription').value = category.description || '';
 
@@ -403,7 +458,7 @@ class AdminCategoryManager {
                 success = await categoryManager.deleteCategory(categoryId);
             } else if (typeof db !== 'undefined') {
                 // Direct Firebase call
-                await db.collection('categories').doc(categoryId).delete();
+                await db.collection('category').doc(categoryId).delete();
                 success = true;
             }
             
