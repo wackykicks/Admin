@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category Management | WackyKicks Admin</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="admin-categories.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+
+<div class="admin-container">
+    <header class="admin-header">
+        <h1><i class="fas fa-tags"></i> Category Management</h1>
+        <nav class="admin-nav">
+            <a href="index.html"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="../index.html"><i class="fas fa-store"></i> View Store</a>
+        </nav>
+    </header>
+
+    <main class="admin-main">
+        <!-- Add New Category Section -->
+        <section class="add-category-section">
+            <h2><i class="fas fa-plus-circle"></i> Add New Category</h2>
+            <form id="addCategoryForm" class="category-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="categoryName">Category Name *</label>
+                        <input type="text" id="categoryName" name="name" required 
+                               placeholder="e.g., Nike, Shoes, Watches">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="categoryIcon">Icon (Emoji) *</label>
+                        <input type="text" id="categoryIcon" name="icon" required 
+                               placeholder="e.g., ✓, 👟, ⌚, 🎒" maxlength="2">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="categoryColor">Color</label>
+                        <input type="color" id="categoryColor" name="color" value="#667eea">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="categoryDescription">Description (Optional)</label>
+                    <textarea id="categoryDescription" name="description" 
+                              placeholder="Brief description of this category"></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Add Category
+                </button>
+            </form>
+        </section>
+
+        <!-- Existing Categories Section -->
+        <section class="categories-list-section">
+            <h2><i class="fas fa-list"></i> Existing Categories</h2>
+            <div class="categories-table-container">
+                <table class="categories-table" id="categoriesTable">
+                    <thead>
+                        <tr>
+                            <th>Preview</th>
+                            <th>Name</th>
+                            <th>Icon</th>
+                            <th>Color</th>
+                            <th>Products</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categoriesTableBody">
+                        <!-- Categories will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Edit Category Modal -->
+        <div id="editModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-edit"></i> Edit Category</h3>
+                    <span class="close" onclick="closeEditModal()">&times;</span>
+                </div>
+                <form id="editCategoryForm" class="category-form">
+                    <input type="hidden" id="editCategoryId">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editCategoryName">Category Name *</label>
+                            <input type="text" id="editCategoryName" name="name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editCategoryIcon">Icon (Emoji) *</label>
+                            <input type="text" id="editCategoryIcon" name="icon" required maxlength="2">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editCategoryColor">Color</label>
+                            <input type="color" id="editCategoryColor" name="color">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editCategoryDescription">Description</label>
+                        <textarea id="editCategoryDescription" name="description"></textarea>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeEditModal()">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update Category
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Product Assignment Section -->
+        <section class="product-assignment-section">
+            <h2><i class="fas fa-link"></i> Assign Products to Categories</h2>
+            <div class="assignment-container">
+                <div class="product-list">
+                    <h3>Products</h3>
+                    <div id="productsList" class="products-grid">
+                        <!-- Products will be loaded here -->
+                    </div>
+                </div>
+                
+                <div class="category-assignment">
+                    <h3>Assign Categories</h3>
+                    <div id="selectedProduct" class="selected-product">
+                        <p>Select a product to assign categories</p>
+                    </div>
+                    
+                    <div id="categoryAssignmentForm" class="assignment-form" style="display: none;">
+                        <div class="categories-checkboxes" id="categoriesCheckboxes">
+                            <!-- Category checkboxes will be loaded here -->
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary" onclick="saveProductCategories()">
+                            <i class="fas fa-save"></i> Save Assignments
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Firebase Scripts -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+<!-- Initialize Firebase Config -->
+<script>
+// Firebase Config
+const firebaseConfig = {
+    apiKey: "AIzaSyDogBkY_Xgx8Fw_3P0iOlVgciVArJHjy5Q",
+    authDomain: "wackykicks-65cbe.firebaseapp.com",
+    projectId: "wackykicks-65cbe",
+    storageBucket: "wackykicks-65cbe.appspot.com",
+    messagingSenderId: "911540684237",
+    appId: "1:911540684237:web:faa772c146ff4acfadb084",
+    measurementId: "G-7HWH0SEJN2"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+</script>
+
+<script src="../categories.js"></script>
+<script src="admin-categories.js"></script>
+
+</body>
+</html>
