@@ -6,6 +6,7 @@
     <title>Category Management | WackyKicks Admin</title>
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="admin-categories.css">
+    <link rel="stylesheet" href="admin-categories-enhanced.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
@@ -35,11 +36,17 @@
                         <label for="categoryImage">Image URL *</label>
                         <input type="url" id="categoryImage" name="image" required 
                                placeholder="https://example.com/image.jpg">
+                        <small class="form-hint">Recommended: 200x200px square image</small>
                     </div>
                     
                     <div class="form-group">
-                        <label for="categoryColor">Color</label>
-                        <input type="color" id="categoryColor" name="color" value="#667eea">
+                        <label for="categoryColor">Brand Color</label>
+                        <div class="color-input-container">
+                            <input type="color" id="categoryColor" name="color" value="#667eea">
+                            <span class="color-preview" id="colorPreview"></span>
+                            <input type="text" id="colorHex" placeholder="#667eea" maxlength="7">
+                        </div>
+                        <small class="form-hint">Choose a color that represents this category</small>
                     </div>
                 </div>
                 
@@ -47,6 +54,17 @@
                     <label for="categoryDescription">Description (Optional)</label>
                     <textarea id="categoryDescription" name="description" 
                               placeholder="Brief description of this category"></textarea>
+                </div>
+
+                <!-- Category Preview -->
+                <div class="category-preview-section">
+                    <label>Preview</label>
+                    <div class="category-preview-card" id="categoryPreview">
+                        <div class="preview-image" id="previewImage">
+                            <img src="https://via.placeholder.com/72x72?text=IMG" alt="Preview" id="previewImg">
+                        </div>
+                        <div class="preview-name" id="previewName">Category Name</div>
+                    </div>
                 </div>
                 
                 <button type="submit" class="btn btn-primary">

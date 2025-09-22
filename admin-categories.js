@@ -191,6 +191,74 @@ class AdminCategoryManager {
                 this.closeEditModal();
             }
         });
+
+        // Live preview functionality
+        this.setupLivePreview();
+        this.setupColorPicker();
+    }
+
+    // Setup live preview for category creation
+    setupLivePreview() {
+        const nameInput = document.getElementById('categoryName');
+        const imageInput = document.getElementById('categoryImage');
+        const colorInput = document.getElementById('categoryColor');
+        const previewName = document.getElementById('previewName');
+        const previewImg = document.getElementById('previewImg');
+        const previewImage = document.getElementById('previewImage');
+
+        if (nameInput && previewName) {
+            nameInput.addEventListener('input', (e) => {
+                previewName.textContent = e.target.value || 'Category Name';
+            });
+        }
+
+        if (imageInput && previewImg) {
+            imageInput.addEventListener('input', (e) => {
+                if (e.target.value) {
+                    previewImg.src = e.target.value;
+                    previewImg.onerror = () => {
+                        previewImg.src = 'https://via.placeholder.com/72x72?text=ERROR';
+                    };
+                } else {
+                    previewImg.src = 'https://via.placeholder.com/72x72?text=IMG';
+                }
+            });
+        }
+
+        if (colorInput && previewImage) {
+            colorInput.addEventListener('input', (e) => {
+                // Keep the preview image background as grayscale regardless of color selection
+                // Color is only used for selection indicators and borders
+                document.documentElement.style.setProperty('--preview-color', e.target.value);
+            });
+        }
+    }
+
+    // Enhanced color picker functionality
+    setupColorPicker() {
+        const colorInput = document.getElementById('categoryColor');
+        const colorHex = document.getElementById('colorHex');
+        const colorPreview = document.getElementById('colorPreview');
+
+        if (colorInput && colorHex && colorPreview) {
+            // Update hex input when color picker changes
+            colorInput.addEventListener('input', (e) => {
+                colorHex.value = e.target.value;
+                colorPreview.style.backgroundColor = e.target.value;
+            });
+
+            // Update color picker when hex input changes
+            colorHex.addEventListener('input', (e) => {
+                if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                    colorInput.value = e.target.value;
+                    colorPreview.style.backgroundColor = e.target.value;
+                }
+            });
+
+            // Initialize preview
+            colorPreview.style.backgroundColor = colorInput.value;
+            colorHex.value = colorInput.value;
+        }
     }
 
     async handleAddCategory(e) {
