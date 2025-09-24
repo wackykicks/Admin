@@ -242,6 +242,22 @@
 
 <div class="admin-container">
     <h1>Manage Products</h1>
+    
+    <!-- Admin Navigation -->
+    <div style="text-align: center; margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+        <h3 style="margin: 0 0 15px 0; color: #495057;">🛠️ Admin Tools</h3>
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <a href="create-today-offer-category.html" style="background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-size: 14px; font-weight: 600; transition: all 0.3s;">
+                🔥 Create Today's Offers Category
+            </a>
+            <a href="manage-todays-offers.html" style="background: #8b5cf6; color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-size: 14px; font-weight: 600;">
+                📦 Manage Today's Offers
+            </a>
+            <a href="admin-categories.html" style="background: #3b82f6; color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-size: 14px; font-weight: 600;">
+                🏷️ Manage Categories
+            </a>
+        </div>
+    </div>
 
     <div class="form-group">
         <label>Name</label>
@@ -258,15 +274,17 @@
     </div>
 
     <div class="form-group">
+        <label>Stock (leave 0 for out of stock)</label>
+        <input type="number" id="productStock" min="0" placeholder="Eg: 10">
+    </div>
+
+    <div class="form-group">
     <label>Available Sizes (comma separated)</label>
     <input type="text" id="productSizes" placeholder="Eg: 7, 8, 9, 10">
     </div>
 
 
-    <div class="form-group">
-        <label>Tag (optional)</label>
-        <input type="text" id="productTag">
-    </div>
+    <!-- Tag field removed - now using automatic discount percentage calculation -->
 
     <div class="form-group">
         <label>Description</label>
@@ -304,7 +322,7 @@ const db = getFirestore(app);
 const nameInput = document.getElementById("productName");
 const oldPriceInput = document.getElementById("productOldPrice");
 const newPriceInput = document.getElementById("productNewPrice");
-const tagInput = document.getElementById("productTag");
+const stockInput = document.getElementById("productStock");
 const imageInputsContainer = document.getElementById("imageInputs");
 const productList = document.getElementById("productList");
 const sizesInput = document.getElementById("productSizes");
@@ -326,7 +344,7 @@ function resetForm() {
     nameInput.value = "";
     oldPriceInput.value = "";
     newPriceInput.value = "";
-    tagInput.value = "";
+    stockInput.value = "";
     sizesInput.value = "";
     descriptionInput.value = "";
     document.getElementById("multiImageInput").value = "";
@@ -345,13 +363,24 @@ async function loadProducts() {
         const product = docSnap.data();
         const firstImage = product.imgUrl[0] || "";
 
+        // Check if product is out of stock (by category or stock field)
+        const isOutOfStockByCategory = product.categories && product.categories.includes('out-of-stock');
+        const isOutOfStockByStock = product.stock !== undefined && product.stock <= 0;
+        const isOutOfStock = isOutOfStockByCategory || isOutOfStockByStock;
+
+        // Calculate discount percentage for admin display
+        const discountPercentage = product.oldPrice && product.newPrice && product.oldPrice > product.newPrice 
+            ? Math.round(((product.oldPrice - product.newPrice) / product.oldPrice) * 100) 
+            : null;
+
         const card = document.createElement("div");
         card.className = "product-card";
         card.innerHTML = `
             <img src="${firstImage}" alt="Product Image">
             <h3>${product.name}</h3>
             <p>₹${product.price}</p>
-            <p>${product.tag || ""}</p>
+            ${isOutOfStock ? `<p style="color: #ef4444; font-weight: bold;">OUT OF STOCK</p>` : 
+              discountPercentage ? `<p style="color: #16a34a; font-weight: bold;">${discountPercentage}% OFF</p>` : '<p style="color: #666;">In Stock</p>'}
             <div class="actions">
                 <button class="edit-btn" onclick="editProduct('${docSnap.id}')">Edit</button>
                 <button class="delete-btn" onclick="deleteProduct('${docSnap.id}')">Delete</button>
@@ -367,7 +396,7 @@ window.submitProduct = async () => {
     const oldPrice = oldPriceInput.value.trim();
     const newPrice = newPriceInput.value.trim();
     const price = newPrice;
-    const tag = tagInput.value.trim();
+    const stock = parseInt(stockInput.value) || 0;
     const imgUrl = document.getElementById("multiImageInput").value
         .split(',')
         .map(url => url.trim())
@@ -382,10 +411,10 @@ window.submitProduct = async () => {
 
     try {
         if (editMode && editingProductId) {
-            await updateDoc(doc(db, "products", editingProductId), { name, price, oldPrice, newPrice, tag, imgUrl, sizes, description });
+            await updateDoc(doc(db, "products", editingProductId), { name, price, oldPrice, newPrice, imgUrl, sizes, description, stock });
             alert("Product updated successfully!");
         } else {
-            await addDoc(collection(db, "products"), { name, price, oldPrice, newPrice, tag, imgUrl, sizes, description });
+            await addDoc(collection(db, "products"), { name, price, oldPrice, newPrice, imgUrl, sizes, description, stock });
             alert("Product added successfully!");
         }
     } catch (err) {
@@ -422,7 +451,7 @@ window.editProduct = async (id) => {
     nameInput.value = product.name;
     oldPriceInput.value = product.oldPrice || "";
     newPriceInput.value = product.newPrice || "";
-    tagInput.value = product.tag || "";
+    stockInput.value = product.stock || 0;
     sizesInput.value = (product.sizes || []).join(", ");
     descriptionInput.value = product.description || "";
 

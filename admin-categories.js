@@ -80,14 +80,16 @@ class AdminCategoryManager {
                 this.categories = categoriesSnapshot.docs.map(doc => {
                     const rawData = doc.data();
                     const data = { 
-                        id: doc.id, 
+                        id: doc.id, // Firebase document ID
+                        firebaseId: doc.id, // Keep reference to Firebase ID
+                        categoryId: rawData.id || rawData.name?.toLowerCase().replace(/[^a-z0-9]/g, '-') || doc.id, // Category identifier for products
                         name: rawData.name || 'Unnamed Category',
                         image: rawData.image || rawData.icon || '',
                         color: rawData.color || '#667eea',
                         description: rawData.description || '',
                         ...rawData
                     };
-                    console.log('Loaded category:', data.name, 'with image:', data.image);
+                    console.log('Loaded category:', data.name, 'with Firebase ID:', doc.id, 'Category ID:', data.categoryId);
                     return data;
                 });
                 
@@ -122,11 +124,13 @@ class AdminCategoryManager {
     getDefaultCategories() {
         return [
             { id: 'all', name: 'All Products', image: 'https://via.placeholder.com/60x60?text=ALL', color: '#667eea' },
+            { id: 'today offer', name: 'Today\'s Offers', image: 'https://via.placeholder.com/60x60?text=OFFER', color: '#6c757d', special: true, description: 'Limited time special offers and deals' },
             { id: 'nike', name: 'Nike', image: 'https://via.placeholder.com/60x60?text=NIKE', color: '#000000' },
             { id: 'adidas', name: 'Adidas', image: 'https://via.placeholder.com/60x60?text=ADIDAS', color: '#0066cc' },
             { id: 'shoes', name: 'Shoes', image: 'https://via.placeholder.com/60x60?text=SHOES', color: '#ff6b35' },
             { id: 'watches', name: 'Watches', image: 'https://via.placeholder.com/60x60?text=WATCH', color: '#28a745' },
-            { id: 'accessories', name: 'Accessories', image: 'https://via.placeholder.com/60x60?text=ACC', color: '#6f42c1' }
+            { id: 'accessories', name: 'Accessories', image: 'https://via.placeholder.com/60x60?text=ACC', color: '#6f42c1' },
+            { id: 'out-of-stock', name: 'Out of Stock', image: 'https://via.placeholder.com/60x60?text=OUT', color: '#ef4444' }
         ];
     }
 
@@ -459,24 +463,38 @@ class AdminCategoryManager {
         const container = document.getElementById('categoriesCheckboxes');
         if (!container) return;
 
-        container.innerHTML = this.categories.map(category => `
+        container.innerHTML = this.categories.map(category => {
+            // Use appropriate category identifier for products
+            const categoryIdentifier = category.categoryId || category.id;
+            return `
             <div class="category-checkbox">
-                <input type="checkbox" id="cat_${category.id}" value="${category.id}">
+                <input type="checkbox" id="cat_${categoryIdentifier}" value="${categoryIdentifier}" data-category-name="${category.name}">
                 <span class="category-checkbox-icon" style="color: ${category.color || '#667eea'}">
                     <img src="${category.image || category.icon || 'https://via.placeholder.com/20x20?text=' + (category.name ? category.name.charAt(0) : 'C')}" 
                          alt="${category.name || 'Category'}" 
                          style="width: 20px; height: 20px; border-radius: 4px; object-fit: cover;"
                          onerror="this.src='https://via.placeholder.com/20x20?text=' + '${category.name ? category.name.charAt(0) : 'C'}'">
                 </span>
-                <label for="cat_${category.id}" class="category-checkbox-name">${category.name || 'Unnamed Category'}</label>
+                <label for="cat_${categoryIdentifier}" class="category-checkbox-name">${category.name || 'Unnamed Category'}</label>
             </div>
-        `).join('');
+        `;
+        }).join('');
     }
 
     getProductCountForCategory(categoryId) {
-        return this.products.filter(product => 
-            product.categories && product.categories.includes(categoryId)
-        ).length;
+        // Handle both Firebase document ID and category name matching
+        const category = this.categories.find(cat => cat.id === categoryId);
+        const categoryName = category ? category.name : categoryId;
+        
+        return this.products.filter(product => {
+            if (!product.categories || !Array.isArray(product.categories)) return false;
+            
+            // Check for exact ID match, name match, or common category identifiers
+            return product.categories.includes(categoryId) || 
+                   product.categories.includes(categoryName) ||
+                   product.categories.includes(categoryName.toLowerCase()) ||
+                   (categoryName === "Today's Offers" && product.categories.includes("today offer"));
+        }).length;
     }
 
     editCategory(categoryId) {
@@ -587,9 +605,15 @@ class AdminCategoryManager {
         
         // Update checkboxes
         this.categories.forEach(category => {
-            const checkbox = document.getElementById(`cat_${category.id}`);
+            const categoryIdentifier = category.categoryId || category.id;
+            const checkbox = document.getElementById(`cat_${categoryIdentifier}`);
             if (checkbox) {
-                checkbox.checked = productCategories.includes(category.id);
+                // Check if product has this category using multiple possible identifiers
+                checkbox.checked = productCategories.includes(categoryIdentifier) ||
+                                 productCategories.includes(category.id) ||
+                                 productCategories.includes(category.name) ||
+                                 productCategories.includes(category.name.toLowerCase()) ||
+                                 (category.name === "Today's Offers" && productCategories.includes("today offer"));
             }
         });
     }
@@ -603,9 +627,18 @@ class AdminCategoryManager {
         // Collect selected categories
         const selectedCategories = [];
         this.categories.forEach(category => {
-            const checkbox = document.getElementById(`cat_${category.id}`);
+            const categoryIdentifier = category.categoryId || category.id;
+            const checkbox = document.getElementById(`cat_${categoryIdentifier}`);
             if (checkbox && checkbox.checked) {
-                selectedCategories.push(category.id);
+                // Use the appropriate identifier for products
+                let categoryToAdd = categoryIdentifier;
+                
+                // Special handling for Today's Offers
+                if (category.name === "Today's Offers") {
+                    categoryToAdd = "today offer";
+                }
+                
+                selectedCategories.push(categoryToAdd);
             }
         });
 
