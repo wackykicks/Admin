@@ -93,43 +93,57 @@ body {
         }
 
         .image-card {
-            background: #fff;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             overflow: hidden;
-            max-width: 250px;
+            max-width: 280px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .image-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
         }
 
         .image-card img {
             max-width: 100%;
-            border-radius: 10px;
-            margin-bottom: 10px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .image-card p {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             word-break: break-all;
             text-align: center;
+            color: #6c757d;
+            margin-bottom: 10px;
         }
 
         .copy-btn {
-            background: #6f47ff;
-            color: #fff;
-            padding: 8px 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 18px;
             border: none;
-            border-radius: 20px;
+            border-radius: 12px;
             cursor: pointer;
             font-size: 0.9rem;
+            font-weight: 600;
             margin-top: 8px;
-            transition: background 0.3s;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
 
         .copy-btn:hover {
-            background: #5533cc;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
 
         .custom-file-label {
@@ -278,6 +292,7 @@ body {
     }
 }
     </style>
+    <link rel="stylesheet" href="../floating-alerts.css">
 </head>
 <body>
 
@@ -296,23 +311,39 @@ body {
     <a href="photo-to-url.html" id="bottom-converter"><i class="fa-solid fa-link"></i></a>
 </nav>
 
-<h2>Photo to URL Converter</h2>
-<p class="subtitle">Upload your images and get instant shareable URLs in JPEG format.</p>
-
-<div class="upload-box">
-    <div class="upload-icon">📤</div>
-    <label for="imageInput" class="custom-file-label">
-        <span id="fileLabelText">Choose Images</span>
-        <input type="file" id="imageInput" accept="image/*" multiple style="display:none;" onchange="updateFileLabel()">
-    </label>
-    <button onclick="uploadImage(); event.stopPropagation();">Upload</button>
+<!-- Header Section -->
+<div class="admin-header" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 20px; padding: 30px; margin: 0 auto 30px; max-width: 800px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); text-align: center;">
+    <h1 style="font-size: 2.5rem; font-weight: 700; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 10px;">
+        <i class="fas fa-images"></i> Photo to URL Converter
+    </h1>
+    <p style="color: #6c757d; font-size: 1.1rem; margin-bottom: 0;">Upload your images and get instant shareable URLs in JPEG format</p>
 </div>
 
-<!-- Add this button just above your <div id="output"></div> -->
-<button onclick="copyAllUrls()" id="copyAllBtn" style="display:none;">Copy All URLs</button>
-<button onclick="toggleRearrange()" id="rearrangeBtn" style="display:none;">Rearrange Photos</button>
+<!-- Main Content Card -->
+<div class="main-card" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 20px; padding: 40px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); max-width: 800px; margin: 0 auto;">
+    <div class="upload-box">
+        <div class="upload-icon">📤</div>
+        <label for="imageInput" class="custom-file-label">
+            <span id="fileLabelText">Choose Images</span>
+            <input type="file" id="imageInput" accept="image/*" multiple style="display:none;" onchange="updateFileLabel()">
+        </label>
+        <button onclick="uploadImage(); event.stopPropagation();" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+            <i class="fas fa-upload"></i> Upload Images
+        </button>
+    </div>
+</div>
 
-<div id="output" class="rearrangeable"></div>
+<!-- Action Buttons -->
+<div style="text-align: center; margin: 20px 0; max-width: 800px; margin-left: auto; margin-right: auto;">
+    <button onclick="copyAllUrls()" id="copyAllBtn" style="display:none; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 12px 24px; border: none; border-radius: 12px; font-weight: 600; margin-right: 10px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+        <i class="fas fa-copy"></i> Copy All URLs
+    </button>
+    <button onclick="toggleRearrange()" id="rearrangeBtn" style="display:none; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 12px 24px; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);">
+        <i class="fas fa-sort"></i> Rearrange Photos
+    </button>
+</div>
+
+<div id="output" class="rearrangeable" style="max-width: 1000px; margin: 0 auto;"></div>
 
 <script>
     let uploadedUrls = [];
@@ -333,7 +364,14 @@ body {
     async function uploadImage() {
         const fileInput = document.getElementById('imageInput');
         const files = fileInput.files;
-        if (!files.length) return alert('Please select at least one image!');
+        if (!files.length) {
+            if (window.FloatingAlertManager) {
+                window.alerts.warning('Please select at least one image to upload!', 'No Images Selected');
+            } else {
+                alert('Please select at least one image!');
+            }
+            return;
+        }
 
         const apiKey = '6c06c886cd6678ed6b6aef4c033f66b0'; // Replace with your ImgBB API key
         const output = document.getElementById('output');
@@ -369,10 +407,18 @@ body {
                         document.getElementById('rearrangeBtn').style.display = 'inline-block';
                         if (rearrangeMode) enableDragAndDrop();
                     } else {
-                        alert('Upload failed: ' + (data.error?.message || 'Unknown error'));
+                        if (window.FloatingAlertManager) {
+                            window.alerts.error('Upload failed: ' + (data.error?.message || 'Unknown error'), 'Upload Failed');
+                        } else {
+                            alert('Upload failed: ' + (data.error?.message || 'Unknown error'));
+                        }
                     }
                 } catch (error) {
-                    alert('Upload error: ' + error.message);
+                    if (window.FloatingAlertManager) {
+                        window.alerts.error('Upload error: ' + error.message, 'Upload Error');
+                    } else {
+                        alert('Upload error: ' + error.message);
+                    }
                 }
             };
             reader.readAsDataURL(file);
@@ -386,9 +432,17 @@ body {
         if (!orderedUrls.length) return;
         const allLinks = orderedUrls.join(', ');
         navigator.clipboard.writeText(allLinks).then(() => {
-            alert('All URLs copied to clipboard (comma separated)!');
+            if (window.FloatingAlertManager) {
+                window.alerts.success('All URLs have been copied to your clipboard (comma separated)!', 'URLs Copied!');
+            } else {
+                alert('All URLs copied to clipboard (comma separated)!');
+            }
         }).catch(err => {
-            alert('Failed to copy: ' + err.message);
+            if (window.FloatingAlertManager) {
+                window.alerts.error('Failed to copy URLs: ' + err.message, 'Copy Failed');
+            } else {
+                alert('Failed to copy: ' + err.message);
+            }
         });
     }
 
@@ -485,5 +539,9 @@ body {
     border-color: #7f4fff;
 }
 </style>
+
+<script src="../floating-alerts.js"></script>
+</body>
+</html>
 
 <!

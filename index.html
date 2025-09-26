@@ -6,144 +6,339 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
-            color: #333;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #2d3436;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1" fill="white" opacity="0.1"/><circle cx="80" cy="80" r="1" fill="white" opacity="0.1"/><circle cx="40" cy="60" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            pointer-events: none;
+            z-index: -1;
         }
 
         .admin-container {
-            max-width: 1000px;
-            margin: 40px auto;
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        .admin-container h1 {
+        /* Header Section */
+        .admin-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             text-align: center;
+        }
+
+        .admin-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .admin-header .subtitle {
+            color: #6c757d;
+            font-size: 1.1rem;
             margin-bottom: 20px;
         }
 
-        .form-group {
-            margin-bottom: 16px;
+        /* Navigation */
+        .admin-nav {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
         }
 
-        label {
+        .admin-nav a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
             font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .admin-nav a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Main Content Card */
+        .main-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            flex: 1;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2d3436;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title i {
+            color: #667eea;
+        }
+
+        /* Form Styles */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3436;
+            font-size: 0.95rem;
         }
 
-        input, textarea, button {
+        .form-group input,
+        .form-group textarea {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
+            padding: 14px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
             font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+            box-sizing: border-box;
         }
 
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        /* Button Styles */
         .add-image-btn {
-            margin-top: 8px;
-            background: #007bff;
-            color: #fff;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
             cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: auto;
         }
 
         .add-image-btn:hover {
-            background: #0056b3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
         }
 
         .submit-btn {
-            background-color: #4CAF50;
-            color: #fff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
             cursor: pointer;
-            margin-top: 16px;
+            display: block;
+            margin: 30px auto 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            width: auto;
         }
 
         .submit-btn:hover {
-            background-color: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
         }
 
+        /* Product List Styles */
         .product-list {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
         }
 
         .product-card {
-            background-color: #fafafa;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 12px rgba(0, 0, 0, 0.05);
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
             text-align: center;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
         }
 
         .product-card img {
             width: 100%;
             max-height: 200px;
-            object-fit: contain;
-            margin-bottom: 10px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 15px;
         }
 
         .product-card h3 {
-            margin: 10px 0 5px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2d3436;
+            margin: 10px 0 8px;
         }
 
         .product-card p {
-            margin: 0 0 15px;
-            font-weight: bold;
+            margin: 4px 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .product-card .price {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 1.1rem;
+            margin: 10px 0;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
         }
 
         .actions button {
-            padding: 8px 16px;
+            padding: 10px 18px;
             border: none;
-            border-radius: 6px;
-            margin: 0 5px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .edit-btn {
-            background-color: #007bff;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             color: white;
+            box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
         }
 
         .edit-btn:hover {
-            background-color: #0056b3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
         }
 
         .delete-btn {
-            background-color: #dc3545;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             color: white;
+            box-shadow: 0 2px 10px rgba(239, 68, 68, 0.3);
         }
 
         .delete-btn:hover {
-            background-color: #b52a37;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        /* Image Input Styles */
+        #imageInputs {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
         }
 
         .sidebar {
     position: fixed;
     top: 0;
     left: 0;
-    width: 230px;
-    height: 100%;
-    background-color: #5c3dff;
+    width: 260px;
+    height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 20px 15px;
+    padding: 25px 20px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 25px;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
 }
 
 .sidebar-logo {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-bottom: 20px;
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 30px;
+    text-align: center;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
 }
 
 .sidebar-links {
@@ -151,10 +346,13 @@
     padding: 0;
     margin: 0;
     flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .sidebar-links li {
-    margin-bottom: 12px;
+    margin-bottom: 0;
 }
 
 .sidebar-links a {
@@ -162,14 +360,40 @@
     text-decoration: none;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
-    border-radius: 8px;
-    transition: background 0.3s;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    position: relative;
+    overflow: hidden;
+}
+
+.sidebar-links a::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.sidebar-links a:hover::before {
+    left: 100%;
 }
 
 .sidebar-links a:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-links a i {
+    font-size: 1.2rem;
+    width: 20px;
+    text-align: center;
 }
 
 /* Bottom Nav Styles (Mobile) */
@@ -179,34 +403,68 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 60px;
-    background-color: #fff;
-    border-top: 1px solid #ccc;
-    display: flex;
+    height: 70px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(102, 126, 234, 0.2);
     justify-content: space-around;
     align-items: center;
     z-index: 1000;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .bottom-nav a {
-    color: #5c3dff;
+    color: #667eea;
     text-decoration: none;
-    font-size: 1.5rem;
-    padding: 10px;
-    transition: color 0.3s;
+    font-size: 1.4rem;
+    padding: 12px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 60px;
+}
+
+.bottom-nav a:hover {
+    background: rgba(102, 126, 234, 0.1);
+    transform: translateY(-2px);
 }
 
 /* Active State */
-.sidebar-links a.active,
-.bottom-nav a.active {
-    background: white;
-    color: #5c3dff;
-    font-weight: bold;
+.sidebar-links a.active {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.sidebar-links a.active i,
+.sidebar-links a.active i {
+    color: white;
+}
+
+.bottom-nav a.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 700;
+    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+}
+
 .bottom-nav a.active i {
-    color: #5c3dff;
+    color: white;
+}
+
+/* Main content offset for sidebar */
+@media (min-width: 769px) {
+    body {
+        margin-left: 260px;
+    }
+    
+    .admin-container {
+        max-width: calc(1200px - 260px);
+        margin-left: 0;
+    }
 }
 
 /* Responsive: Hide sidebar on small screens, show bottom nav */
@@ -216,10 +474,251 @@
     }
 
     .bottom-nav {
-        display: flex;
+        display: flex !important;
+    }
+    
+    body {
+        margin-left: 0;
+        padding-bottom: 80px;
+    }
+    
+    .admin-container {
+        max-width: 100%;
+        padding: 15px;
+    }
+    
+    .admin-header {
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .admin-header h1 {
+        font-size: 2rem;
+    }
+    
+    .main-card {
+        padding: 25px;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .product-list {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+    }
+    
+    .admin-nav {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .admin-nav a {
+        text-align: center;
+        padding: 10px 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-container {
+        padding: 10px;
+    }
+    
+    .admin-header {
+        padding: 15px;
+    }
+    
+    .admin-header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .main-card {
+        padding: 20px;
+    }
+    
+    .product-list {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .form-group input,
+    .form-group textarea {
+        padding: 12px;
+    }
+    
+    .submit-btn {
+        padding: 14px 28px;
+        font-size: 1rem;
+    }
+}
+
+/* Color Selection Styles */
+.color-selection-container {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    background: #f9f9f9;
+}
+
+.color-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.color-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    width: auto;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.color-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.color-btn.selected {
+    transform: scale(0.95);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.selected-colors-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 40px;
+    padding: 10px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+}
+
+.selected-color-tag {
+    display: inline-flex;
+    align-items: center;
+    background: #8b5cf6;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 600;
+    gap: 8px;
+}
+
+.selected-color-tag .remove-color {
+    cursor: pointer;
+    background: rgba(255,255,255,0.3);
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    transition: background 0.3s;
+}
+
+.selected-color-tag .remove-color:hover {
+    background: rgba(255,255,255,0.5);
+}
+
+.custom-color-section {
+    margin-top: 15px;
+    padding: 12px;
+    background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+    border: 1px solid #e0e4ff;
+    border-radius: 8px;
+}
+
+.custom-color-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.custom-color-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.custom-color-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 13px;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.custom-color-input:focus {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1);
+    outline: none;
+}
+
+.add-color-btn {
+    width: auto !important;
+    padding: 8px 16px !important;
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.add-color-btn:hover {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3) !important;
+}
+
+.add-color-btn:active {
+    transform: translateY(0) !important;
+}
+
+.quick-add-examples {
+    margin-top: 8px;
+    padding: 6px 8px;
+    background: rgba(139, 92, 246, 0.05);
+    border-radius: 4px;
+    border-left: 3px solid #8b5cf6;
+}
+
+@media (max-width: 768px) {
+    .color-buttons {
+        gap: 6px;
+    }
+    
+    .color-btn {
+        padding: 6px 12px;
+        font-size: 11px;
+    }
+    
+    .selected-color-tag {
+        font-size: 11px;
+        padding: 4px 10px;
     }
 }
     </style>
+    <link rel="stylesheet" href="../floating-alerts.css">
 </head>
 <body>
 
@@ -241,23 +740,45 @@
 </nav>
 
 <div class="admin-container">
-    <h1>Manage Products</h1>
-    
-    <!-- Admin Navigation -->
-    <div style="text-align: center; margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
-        <h3 style="margin: 0 0 15px 0; color: #495057;">🛠️ Admin Tools</h3>
-        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-            <a href="create-today-offer-category.html" style="background: linear-gradient(135deg, #ff6b6b, #ee5a24); color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-size: 14px; font-weight: 600; transition: all 0.3s;">
-                🔥 Create Today's Offers Category
+    <!-- Header Section -->
+    <div class="admin-header">
+        <h1><i class="fas fa-cogs"></i> Product Management</h1>
+        <p class="subtitle">Add, edit, and manage your store products with ease</p>
+        
+        <!-- Navigation -->
+        <div class="admin-nav">
+            <a href="create-today-offer-category.html">
+                <i class="fas fa-fire"></i>
+                Today's Offers
             </a>
-            <a href="manage-todays-offers.html" style="background: #8b5cf6; color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-size: 14px; font-weight: 600;">
-                📦 Manage Today's Offers
+            <a href="manage-todays-offers.html">
+                <i class="fas fa-box"></i>
+                Manage Offers
             </a>
-            <a href="admin-categories.html" style="background: #3b82f6; color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-size: 14px; font-weight: 600;">
-                🏷️ Manage Categories
+            <a href="categories.html">
+                <i class="fas fa-tags"></i>
+                Categories
+            </a>
+            <a href="photo-to-url.html">
+                <i class="fas fa-images"></i>
+                Image Converter
+            </a>
+            <a href="../index.html">
+                <i class="fas fa-store"></i>
+                View Store
             </a>
         </div>
     </div>
+
+    <!-- Main Content Card -->
+    <div class="main-card">
+        <h2 class="section-title">
+            <i class="fas fa-plus-circle"></i>
+            Add New Product
+        </h2>
+        
+        <!-- Form Grid -->
+        <div class="form-grid">
 
     <div class="form-group">
         <label>Name</label>
@@ -283,6 +804,75 @@
     <input type="text" id="productSizes" placeholder="Eg: 7, 8, 9, 10">
     </div>
 
+    <div class="form-group">
+        <label>Available Colors</label>
+        <div class="color-selection-container">
+            <!-- Quick Color Selection -->
+            <div class="quick-colors">
+                <h4 style="margin: 10px 0 8px 0; font-size: 14px; color: #666;">Quick Select Colors:</h4>
+                <div class="color-buttons">
+                    <button type="button" class="color-btn" data-color="Black" onclick="addQuickColor('Black')" style="background: #000000; color: white;">Black</button>
+                    <button type="button" class="color-btn" data-color="White" onclick="addQuickColor('White')" style="background: #ffffff; color: black; border: 1px solid #ddd;">White</button>
+                    <button type="button" class="color-btn" data-color="Red" onclick="addQuickColor('Red')" style="background: #ef4444; color: white;">Red</button>
+                    <button type="button" class="color-btn" data-color="Blue" onclick="addQuickColor('Blue')" style="background: #3b82f6; color: white;">Blue</button>
+                    <button type="button" class="color-btn" data-color="Green" onclick="addQuickColor('Green')" style="background: #22c55e; color: white;">Green</button>
+                    <button type="button" class="color-btn" data-color="Yellow" onclick="addQuickColor('Yellow')" style="background: #eab308; color: black;">Yellow</button>
+                    <button type="button" class="color-btn" data-color="Purple" onclick="addQuickColor('Purple')" style="background: #8b5cf6; color: white;">Purple</button>
+                    <button type="button" class="color-btn" data-color="Pink" onclick="addQuickColor('Pink')" style="background: #ec4899; color: white;">Pink</button>
+                    <button type="button" class="color-btn" data-color="Orange" onclick="addQuickColor('Orange')" style="background: #f97316; color: white;">Orange</button>
+                    <button type="button" class="color-btn" data-color="Brown" onclick="addQuickColor('Brown')" style="background: #a3744c; color: white;">Brown</button>
+                    <button type="button" class="color-btn" data-color="Gray" onclick="addQuickColor('Gray')" style="background: #6b7280; color: white;">Gray</button>
+                    <button type="button" class="color-btn" data-color="Navy" onclick="addQuickColor('Navy')" style="background: #1e3a8a; color: white;">Navy</button>
+                </div>
+            </div>
+            
+            <!-- Selected Colors Display -->
+            <div class="selected-colors">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h4 style="margin: 15px 0 8px 0; font-size: 14px; color: #666;">Selected Colors:</h4>
+                    <button type="button" onclick="clearAllColors()" style="background: #ef4444; color: white; border: none; padding: 4px 12px; border-radius: 15px; font-size: 11px; cursor: pointer;">Clear All</button>
+                </div>
+                <div id="selectedColorsList" class="selected-colors-list">
+                    <!-- Selected colors will appear here -->
+                </div>
+            </div>
+            
+            <!-- Custom Color Input -->
+            <div class="custom-color-section">
+                <h4 style="margin: 15px 0 8px 0; font-size: 14px; color: #666;">🎨 Add Custom Colors:</h4>
+                <div class="custom-color-inputs">
+                    <!-- Multiple custom color slots -->
+                    <div class="custom-color-row">
+                        <input type="text" id="customColorInput1" placeholder="e.g., Rose Gold, Mint Green" class="custom-color-input" onkeypress="if(event.key==='Enter') addCustomColor('customColorInput1')">
+                        <button type="button" onclick="addCustomColor('customColorInput1')" class="add-color-btn">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+                    <div class="custom-color-row">
+                        <input type="text" id="customColorInput2" placeholder="e.g., Sky Blue, Crimson Red" class="custom-color-input" onkeypress="if(event.key==='Enter') addCustomColor('customColorInput2')">
+                        <button type="button" onclick="addCustomColor('customColorInput2')" class="add-color-btn">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+                    <div class="custom-color-row">
+                        <input type="text" id="customColorInput3" placeholder="e.g., Forest Green, Sunset Orange" class="custom-color-input" onkeypress="if(event.key==='Enter') addCustomColor('customColorInput3')">
+                        <button type="button" onclick="addCustomColor('customColorInput3')" class="add-color-btn">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+                </div>
+                <div class="quick-add-examples">
+                    <small style="color: #666; font-style: italic;">
+                        💡 Examples: Burgundy, Coral, Turquoise, Lavender, Champagne, Emerald, etc.
+                    </small>
+                </div>
+            </div>
+            
+            <!-- Hidden input for form submission -->
+            <input type="hidden" id="productColors">
+        </div>
+    </div>
+
 
     <!-- Tag field removed - now using automatic discount percentage calculation -->
 
@@ -292,13 +882,31 @@
     </div>
 
     <div class="form-group">
-    <label>Image URLs (comma separated)</label>
-    <input type="text" id="multiImageInput" placeholder="Eg: https://url1.jpg, https://url2.jpg">
-</div>
-    
-    <button class="submit-btn" onclick="submitProduct()">Add Product</button>
+            <div class="form-group">
+                <label>Image URLs (comma separated)</label>
+                <input type="text" id="multiImageInput" placeholder="Eg: https://url1.jpg, https://url2.jpg">
+            </div>
+        </div>
+        
+        <button class="submit-btn" onclick="submitProduct()">
+            <i class="fas fa-plus"></i>
+            Add Product
+        </button>
 
-    <div class="product-list" id="productList">Loading...</div>
+        <!-- Products List Section -->
+        <div style="margin-top: 50px;">
+            <h2 class="section-title">
+                <i class="fas fa-list"></i>
+                Existing Products
+            </h2>
+            <div class="product-list" id="productList">
+                <div style="text-align: center; padding: 40px; color: #6c757d;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 15px;"></i>
+                    <p>Loading products...</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script type="module">
@@ -326,10 +934,12 @@ const stockInput = document.getElementById("productStock");
 const imageInputsContainer = document.getElementById("imageInputs");
 const productList = document.getElementById("productList");
 const sizesInput = document.getElementById("productSizes");
+const colorsInput = document.getElementById("productColors");
 const descriptionInput = document.getElementById("productDescription");
 
 let editMode = false;
 let editingProductId = null;
+let selectedColors = [];
 
 // Add image input dynamically
 window.addImageInput = () => {
@@ -337,6 +947,106 @@ window.addImageInput = () => {
     div.className = "form-group";
     div.innerHTML = `<input type="text" class="image-url" placeholder="Image URL">`;
     imageInputsContainer.appendChild(div);
+};
+
+// Color Management Functions
+window.addQuickColor = (colorName) => {
+    console.log('Adding color:', colorName);
+    if (!selectedColors.includes(colorName)) {
+        selectedColors.push(colorName);
+        console.log('Selected colors:', selectedColors);
+        updateColorDisplay();
+        updateColorInput();
+        
+        // Visual feedback
+        const button = document.querySelector(`[data-color="${colorName}"]`);
+        if (button) {
+            button.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                button.style.transform = '';
+            }, 150);
+        }
+    } else {
+        console.log('Color already selected:', colorName);
+    }
+};
+
+window.addCustomColor = () => {
+    const customInput = document.getElementById('customColorInput');
+    const colorName = customInput.value.trim();
+    
+    console.log('Adding custom color:', colorName);
+    
+    if (colorName && !selectedColors.includes(colorName)) {
+        selectedColors.push(colorName);
+        console.log('Selected colors:', selectedColors);
+        updateColorDisplay();
+        updateColorInput();
+        customInput.value = '';
+    } else if (!colorName) {
+        if (window.FloatingAlertManager) {
+            window.alerts.warning('Please enter a color name', 'Color Required');
+        } else {
+            alert('Please enter a color name');
+        }
+    } else {
+        if (window.FloatingAlertManager) {
+            window.alerts.warning('This color has already been selected', 'Color Already Selected');
+        } else {
+            alert('Color already selected');
+        }
+    }
+};
+
+window.removeColor = (colorName) => {
+    selectedColors = selectedColors.filter(color => color !== colorName);
+    updateColorDisplay();
+    updateColorInput();
+};
+
+function updateColorDisplay() {
+    console.log('Updating color display. Selected colors:', selectedColors);
+    const container = document.getElementById('selectedColorsList');
+    
+    if (!container) {
+        console.error('selectedColorsList container not found');
+        return;
+    }
+    
+    container.innerHTML = '';
+    
+    if (selectedColors.length === 0) {
+        container.innerHTML = '<span style="color: #999; font-style: italic; padding: 10px;">No colors selected</span>';
+    } else {
+        selectedColors.forEach(color => {
+            const tag = document.createElement('div');
+            tag.className = 'selected-color-tag';
+            tag.innerHTML = `
+                ${color}
+                <span class="remove-color" onclick="removeColor('${color}')">×</span>
+            `;
+            container.appendChild(tag);
+        });
+    }
+    
+    // Update the header to show count
+    const header = document.querySelector('.selected-colors h4');
+    if (header) {
+        header.textContent = `Selected Colors (${selectedColors.length}):`;
+    }
+    
+    console.log('Color display updated successfully');
+}
+
+function updateColorInput() {
+    document.getElementById('productColors').value = selectedColors.join(', ');
+}
+
+// Clear all colors
+window.clearAllColors = () => {
+    selectedColors = [];
+    updateColorDisplay();
+    updateColorInput();
 };
 
 // Reset form
@@ -348,6 +1058,13 @@ function resetForm() {
     sizesInput.value = "";
     descriptionInput.value = "";
     document.getElementById("multiImageInput").value = "";
+    document.getElementById("customColorInput").value = "";
+    
+    // Reset colors
+    selectedColors = [];
+    updateColorDisplay();
+    updateColorInput();
+    
     editMode = false;
     editingProductId = null;
     document.querySelector(".submit-btn").innerText = "Add Product";
@@ -402,23 +1119,40 @@ window.submitProduct = async () => {
         .map(url => url.trim())
         .filter(url => url);
     const sizes = sizesInput.value.split(",").map(s => s.trim()).filter(s => s);
+    const colors = selectedColors; // Use the selectedColors array instead
     const description = descriptionInput.value.trim();
 
     if (!name || !oldPrice || !newPrice || imgUrl.length === 0) {
-        alert("Name, Old Price, New Price, and at least one Image URL are required.");
+        if (window.FloatingAlertManager) {
+            window.alerts.warning('Name, Old Price, New Price, and at least one Image URL are required.', 'Missing Required Fields');
+        } else {
+            alert("Name, Old Price, New Price, and at least one Image URL are required.");
+        }
         return;
     }
 
     try {
         if (editMode && editingProductId) {
-            await updateDoc(doc(db, "products", editingProductId), { name, price, oldPrice, newPrice, imgUrl, sizes, description, stock });
-            alert("Product updated successfully!");
+            await updateDoc(doc(db, "products", editingProductId), { name, price, oldPrice, newPrice, imgUrl, sizes, colors, description, stock });
+            if (window.FloatingAlertManager) {
+                window.FloatingAlertManager.productUpdated();
+            } else {
+                alert("Product updated successfully!");
+            }
         } else {
-            await addDoc(collection(db, "products"), { name, price, oldPrice, newPrice, imgUrl, sizes, description, stock });
-            alert("Product added successfully!");
+            await addDoc(collection(db, "products"), { name, price, oldPrice, newPrice, imgUrl, sizes, colors, description, stock });
+            if (window.FloatingAlertManager) {
+                window.FloatingAlertManager.productAdded();
+            } else {
+                alert("Product added successfully!");
+            }
         }
     } catch (err) {
-        alert("Error saving product: " + err.message);
+        if (window.FloatingAlertManager) {
+            window.alerts.error("Error saving product: " + err.message, 'Save Error');
+        } else {
+            alert("Error saving product: " + err.message);
+        }
     }
 
     resetForm();
@@ -430,10 +1164,18 @@ window.deleteProduct = async (id) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try {
         await deleteDoc(doc(db, "products", id));
-        alert("Product deleted successfully!");
+        if (window.FloatingAlertManager) {
+            window.FloatingAlertManager.productDeleted();
+        } else {
+            alert("Product deleted successfully!");
+        }
         loadProducts();
     } catch (err) {
-        alert("Error deleting product: " + err.message);
+        if (window.FloatingAlertManager) {
+            window.alerts.error("Error deleting product: " + err.message, 'Delete Error');
+        } else {
+            alert("Error deleting product: " + err.message);
+        }
     }
 };
 
@@ -443,7 +1185,11 @@ window.editProduct = async (id) => {
     const docSnap = await getDoc(docRef);
 
     if (!docSnap.exists()) {
-        alert("Product not found.");
+        if (window.FloatingAlertManager) {
+            window.alerts.error("Product not found in database.", 'Product Not Found');
+        } else {
+            alert("Product not found.");
+        }
         return;
     }
 
@@ -454,6 +1200,11 @@ window.editProduct = async (id) => {
     stockInput.value = product.stock || 0;
     sizesInput.value = (product.sizes || []).join(", ");
     descriptionInput.value = product.description || "";
+    
+    // Load colors into the color selection system
+    selectedColors = product.colors || [];
+    updateColorDisplay();
+    updateColorInput();
 
     // Set comma separated image URLs
     document.getElementById("multiImageInput").value = (product.imgUrl || []).join(', ');
@@ -463,8 +1214,19 @@ window.editProduct = async (id) => {
     document.querySelector(".submit-btn").innerText = "Update Product";
 };
 
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, initializing color system');
+    updateColorDisplay();
+});
+
 // Initial load
 loadProducts();
+
+// Initialize color display (backup)
+setTimeout(() => {
+    updateColorDisplay();
+}, 100);
 
 // Highlight active link
     const path = window.location.pathname;
@@ -474,6 +1236,8 @@ loadProducts();
         document.getElementById("nav-converter").classList.add("active");
     }
 </script>
+
+<script src="../floating-alerts.js"></script>
 
 
 </body>

@@ -433,6 +433,9 @@ class AdminCategoryManager {
                 </td>
                 <td>
                     <div class="actions-cell">
+                        <button class="action-btn btn-info" onclick="adminCategoryManager.viewCategoryProducts('${category.id}', '${category.name || 'Unnamed Category'}')">
+                            <i class="fas fa-eye"></i> View Products
+                        </button>
                         <button class="action-btn btn-warning" onclick="adminCategoryManager.editCategory('${category.id}')">
                             <i class="fas fa-edit"></i> Edit
                         </button>
@@ -529,6 +532,145 @@ class AdminCategoryManager {
 
     closeEditModal() {
         document.getElementById('editModal').style.display = 'none';
+    }
+
+    viewCategoryProducts(categoryId, categoryName) {
+        console.log('=== VIEW CATEGORY PRODUCTS ===');
+        console.log('Category ID:', categoryId);
+        console.log('Category Name:', categoryName);
+        
+        // Get products for this category
+        const categoryProducts = this.getProductsForCategory(categoryId);
+        
+        console.log('Found products:', categoryProducts.length);
+        categoryProducts.forEach(product => console.log('- ', product.name));
+        
+        // Create and show modal
+        this.showCategoryProductsModal(categoryId, categoryName, categoryProducts);
+    }
+
+    getProductsForCategory(categoryId) {
+        const category = this.categories.find(cat => cat.id === categoryId);
+        const categoryName = category ? category.name : categoryId;
+        
+        return this.products.filter(product => {
+            if (!product.categories || !Array.isArray(product.categories)) return false;
+            
+            // Check for exact ID match, name match, or common category identifiers
+            return product.categories.includes(categoryId) || 
+                   product.categories.includes(categoryName) ||
+                   product.categories.includes(categoryName.toLowerCase()) ||
+                   (categoryName === "Today's Offers" && product.categories.includes("today offer"));
+        });
+    }
+
+    showCategoryProductsModal(categoryId, categoryName, products) {
+        // Create modal HTML if it doesn't exist
+        let modal = document.getElementById('categoryProductsModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'categoryProductsModal';
+            modal.className = 'modal';
+            document.body.appendChild(modal);
+        }
+
+        // Generate products HTML
+        let productsHTML = '';
+        if (products.length === 0) {
+            productsHTML = `
+                <div class="no-products-message" style="text-align: center; padding: 40px; color: #666;">
+                    <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;"></i>
+                    <h3 style="margin: 0 0 10px 0; color: #333;">No Products Found</h3>
+                    <p style="margin: 0; font-size: 0.9rem;">No products are currently assigned to this category.</p>
+                    <button class="btn btn-primary" style="margin-top: 20px;" onclick="document.getElementById('categoryProductsModal').style.display='none'">
+                        <i class="fas fa-arrow-left"></i> Go Back
+                    </button>
+                </div>
+            `;
+        } else {
+            productsHTML = `
+                <div class="category-products-grid">
+                    ${products.map(product => {
+                        const firstImage = (product.imgUrl && product.imgUrl[0]) || product.img || '../Logo/1000163691.jpg';
+                        const price = product.newPrice || product.price || 'N/A';
+                        const oldPrice = product.oldPrice;
+                        
+                        // Check if product is out of stock
+                        const isOutOfStock = product.categories && product.categories.includes('out-of-stock');
+                        
+                        return `
+                            <div class="category-product-card">
+                                <div class="category-product-image">
+                                    <img src="${firstImage}" alt="${product.name}" onerror="this.src='../Logo/1000163691.jpg'">
+                                    ${isOutOfStock ? '<div class="out-of-stock-badge">Out of Stock</div>' : ''}
+                                </div>
+                                <div class="category-product-info">
+                                    <h4 class="category-product-name">${product.name}</h4>
+                                    <div class="category-product-price">
+                                        ${oldPrice ? `<span class="old-price">₹${oldPrice}</span>` : ''}
+                                        <span class="new-price">₹${price}</span>
+                                    </div>
+                                    <div class="category-product-categories">
+                                        ${(product.categories || []).map(cat => `<span class="category-tag">${cat}</span>`).join('')}
+                                    </div>
+                                    <div class="category-product-actions">
+                                        <a href="../product.html?id=${product.id}" target="_blank" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                        <button class="btn btn-sm btn-warning" onclick="adminCategoryManager.editProductCategories('${product.id}')">
+                                            <i class="fas fa-edit"></i> Edit Categories
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 1200px; max-height: 90vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <h3><i class="fas fa-boxes"></i> Products in "${categoryName}" Category</h3>
+                    <span class="close" onclick="document.getElementById('categoryProductsModal').style.display='none'">&times;</span>
+                </div>
+                <div class="modal-body" style="padding: 20px;">
+                    <div class="category-products-summary" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #667eea;">
+                        <strong>${products.length}</strong> product${products.length !== 1 ? 's' : ''} found in this category
+                        ${products.length > 0 ? `
+                            <div style="margin-top: 8px; font-size: 0.9rem; color: #666;">
+                                <i class="fas fa-info-circle"></i> Click "View" to see product details or "Edit Categories" to modify category assignments
+                            </div>
+                        ` : ''}
+                    </div>
+                    ${productsHTML}
+                </div>
+            </div>
+        `;
+
+        modal.style.display = 'block';
+    }
+
+    editProductCategories(productId) {
+        // Find the product and select it for category editing
+        this.selectedProduct = this.products.find(product => product.id === productId);
+        
+        if (this.selectedProduct) {
+            // Close the category products modal
+            document.getElementById('categoryProductsModal').style.display = 'none';
+            
+            // Select the product in the assignment section
+            this.selectProduct(productId);
+            
+            // Scroll to the assignment section
+            const assignmentSection = document.querySelector('.product-assignment-section');
+            if (assignmentSection) {
+                assignmentSection.scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            this.showMessage(`Selected "${this.selectedProduct.name}" for category editing`, 'info');
+        }
     }
 
     async deleteCategory(categoryId, categoryName) {
