@@ -16,7 +16,7 @@
         <h1><i class="fas fa-tags"></i> Category Management</h1>
         <nav class="admin-nav">
             <a href="index.html"><i class="fas fa-home"></i> Dashboard</a>
-            <a href="../index.html"><i class="fas fa-store"></i> View Store</a>
+            <a href="https://wackykicks.store"><i class="fas fa-store"></i> View Store</a>
         </nav>
     </header>
 
@@ -160,29 +160,68 @@
 
         <!-- Product Assignment Section -->
         <section class="product-assignment-section">
-            <h2><i class="fas fa-link"></i> Assign Products to Categories</h2>
+            <h2><i class="fas fa-link"></i> Bulk Assign Products to Categories</h2>
+            
+            <!-- Selection Controls -->
+            <div class="selection-controls">
+                <div class="selection-actions">
+                    <button type="button" class="btn btn-secondary" onclick="selectAllProducts()">
+                        <i class="fas fa-check-double"></i> Select All
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="clearAllProducts()">
+                        <i class="fas fa-times-circle"></i> Clear All
+                    </button>
+                    <button type="button" class="btn btn-info" onclick="toggleProductSelection()">
+                        <i class="fas fa-exchange-alt"></i> Toggle Selection
+                    </button>
+                </div>
+                <div class="selection-info">
+                    <span id="selectionCount" class="selection-counter">0 products selected</span>
+                </div>
+            </div>
+
             <div class="assignment-container">
                 <div class="product-list">
-                    <h3>Products</h3>
+                    <h3>Products <span class="product-count" id="totalProductCount">(0)</span></h3>
+                    <div class="products-search">
+                        <input type="text" id="productSearch" placeholder="Search products..." class="search-input">
+                        <i class="fas fa-search search-icon"></i>
+                    </div>
                     <div id="productsList" class="products-grid">
                         <!-- Products will be loaded here -->
                     </div>
                 </div>
                 
                 <div class="category-assignment">
-                    <h3>Assign Categories</h3>
-                    <div id="selectedProduct" class="selected-product">
-                        <p>Select a product to assign categories</p>
+                    <h3>Bulk Category Assignment</h3>
+                    <div id="selectedProducts" class="selected-products">
+                        <p class="no-selection">Select one or more products to assign categories</p>
                     </div>
                     
                     <div id="categoryAssignmentForm" class="assignment-form" style="display: none;">
+                        <div class="assignment-mode-selector">
+                            <label class="radio-option">
+                                <input type="radio" name="assignmentMode" value="add" checked>
+                                <span class="radio-text">Add to existing categories</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="assignmentMode" value="replace">
+                                <span class="radio-text">Replace all categories</span>
+                            </label>
+                        </div>
+                        
                         <div class="categories-checkboxes" id="categoriesCheckboxes">
                             <!-- Category checkboxes will be loaded here -->
                         </div>
                         
-                        <button type="button" class="btn btn-primary" onclick="saveProductCategories()">
-                            <i class="fas fa-save"></i> Save Assignments
-                        </button>
+                        <div class="assignment-actions">
+                            <button type="button" class="btn btn-primary" onclick="saveBulkProductCategories()">
+                                <i class="fas fa-save"></i> Apply to Selected Products
+                            </button>
+                            <button type="button" class="btn btn-warning" onclick="previewCategoryChanges()">
+                                <i class="fas fa-eye"></i> Preview Changes
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
