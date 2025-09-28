@@ -1411,6 +1411,18 @@
         <label>Image URLs (comma separated)</label>
         <input type="text" id="multiImageInput" placeholder="Eg: https://url1.jpg, https://url2.jpg">
     </div>
+
+    <div class="form-group">
+        <label>Product Categories</label>
+        <div id="productCategoriesSection" style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; background: #f9f9f9;">
+            <div id="productCategoriesCheckboxes" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                <!-- Categories will be loaded here -->
+            </div>
+            <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                <i class="fas fa-info-circle"></i> Select categories for this product
+            </div>
+        </div>
+    </div>
         
         </div> <!-- Close form-grid -->
         
@@ -1745,6 +1757,9 @@ function resetForm() {
     arrow.classList.remove('rotated');
     isColorDropdownOpen = false;
     
+    // Clear category selections
+    clearCategorySelections();
+    
     editMode = false;
     editingProductId = null;
     document.querySelector(".submit-btn").innerText = "Add Product";
@@ -1844,6 +1859,7 @@ window.submitProduct = async () => {
     const sizes = sizesInput.value.split(",").map(s => s.trim()).filter(s => s);
     const colors = selectedColors; // Use the selectedColors array instead
     const description = descriptionInput.value.trim();
+    const categories = getSelectedProductCategories(); // Get selected categories
 
     if (!name || !oldPrice || !newPrice || imgUrl.length === 0) {
         if (window.FloatingAlertManager) {
@@ -1856,14 +1872,14 @@ window.submitProduct = async () => {
 
     try {
         if (editMode && editingProductId) {
-            await updateDoc(doc(db, "products", editingProductId), { name, price, oldPrice, newPrice, imgUrl, sizes, colors, description, stock });
+            await updateDoc(doc(db, "products", editingProductId), { name, price, oldPrice, newPrice, imgUrl, sizes, colors, description, stock, categories });
             if (window.FloatingAlertManager) {
                 window.FloatingAlertManager.productUpdated();
             } else {
                 alert("Product updated successfully!");
             }
         } else {
-            await addDoc(collection(db, "products"), { name, price, oldPrice, newPrice, imgUrl, sizes, colors, description, stock });
+            await addDoc(collection(db, "products"), { name, price, oldPrice, newPrice, imgUrl, sizes, colors, description, stock, categories });
             if (window.FloatingAlertManager) {
                 window.FloatingAlertManager.productAdded();
             } else {
@@ -1948,6 +1964,11 @@ window.editProduct = async (id) => {
     
     updateColorDisplay();
     updateColorInput();
+    
+    // Set categories if available
+    if (product.categories) {
+        setProductCategories(product.categories);
+    }
 
     // Set comma separated image URLs
     document.getElementById("multiImageInput").value = (product.imgUrl || []).join(', ');
@@ -1972,6 +1993,106 @@ function getColorHexForAdmin(colorName) {
     return colorMap[colorName] || colorMap[colorName.toLowerCase()] || '#6b7280';
 }
 
+// Categories for product form
+let availableCategories = [];
+
+// Load categories for product form
+async function loadProductCategories() {
+    try {
+        const categoriesRef = collection(db, 'category');
+        const categoriesSnapshot = await getDocs(categoriesRef);
+        
+        availableCategories = [];
+        categoriesSnapshot.forEach(doc => {
+            availableCategories.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+        
+        console.log('Loaded categories for product form:', availableCategories);
+        renderProductCategoriesCheckboxes();
+        
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        // Use default categories if loading fails
+        availableCategories = [
+            { id: 'nike', name: 'Nike', color: '#000000' },
+            { id: 'adidas', name: 'Adidas', color: '#0066cc' },
+            { id: 'shoes', name: 'Shoes', color: '#ff6b35' },
+            { id: 'watches', name: 'Watches', color: '#28a745' },
+            { id: 'accessories', name: 'Accessories', color: '#6f42c1' },
+            { id: 'today-offer', name: "Today's Offers", color: '#6c757d' }
+        ];
+        renderProductCategoriesCheckboxes();
+    }
+}
+
+// Render category checkboxes in product form
+function renderProductCategoriesCheckboxes() {
+    const container = document.getElementById('productCategoriesCheckboxes');
+    if (!container) return;
+
+    container.innerHTML = availableCategories.map(category => `
+        <div style="display: flex; align-items: center; gap: 8px; padding: 8px; border: 1px solid #ddd; border-radius: 6px; background: white;">
+            <input type="checkbox" id="prod_cat_${category.id}" value="${category.id}" style="margin: 0;">
+            <div style="width: 16px; height: 16px; border-radius: 50%; background-color: ${category.color || '#667eea'};"></div>
+            <label for="prod_cat_${category.id}" style="margin: 0; font-size: 13px; font-weight: 500; cursor: pointer;">${category.name}</label>
+        </div>
+    `).join('');
+}
+
+// Get selected categories from product form
+function getSelectedProductCategories() {
+    const selectedCategories = [];
+    const checkboxes = document.querySelectorAll('#productCategoriesCheckboxes input[type="checkbox"]:checked');
+    
+    checkboxes.forEach(checkbox => {
+        const category = availableCategories.find(cat => cat.id === checkbox.value);
+        if (category) {
+            // Use consistent naming (handle Today's Offers special case)
+            const categoryName = category.name === "Today's Offers" ? "today offer" : (category.categoryId || category.id);
+            selectedCategories.push(categoryName);
+        }
+    });
+    
+    return selectedCategories;
+}
+
+// Clear category selections
+function clearCategorySelections() {
+    const checkboxes = document.querySelectorAll('#productCategoriesCheckboxes input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+}
+
+// Set category selections (for edit mode)
+function setProductCategories(categories) {
+    if (!categories || !Array.isArray(categories)) return;
+    
+    // Clear all first
+    clearCategorySelections();
+    
+    // Check matching categories
+    categories.forEach(prodCat => {
+        const category = availableCategories.find(cat => {
+            const categoryId = cat.categoryId || cat.id;
+            return categoryId === prodCat || 
+                   cat.id === prodCat || 
+                   cat.name.toLowerCase() === prodCat.toLowerCase() ||
+                   (cat.name === "Today's Offers" && prodCat === "today offer");
+        });
+        
+        if (category) {
+            const checkbox = document.getElementById(`prod_cat_${category.id}`);
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+        }
+    });
+}
+
 // Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, initializing color system');
@@ -1980,6 +2101,9 @@ document.addEventListener('DOMContentLoaded', () => {
     selectedColors = [{name: 'Blue', hex: '#3b82f6'}];
     updateColorDisplay();
     updateColorInput();
+    
+    // Load categories for product form
+    loadProductCategories();
     
     // Add click outside handler to close color dropdown
     document.addEventListener('click', (event) => {
