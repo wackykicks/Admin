@@ -465,7 +465,7 @@ class AdminCategoryManager {
             return `
                 <div class="product-item ${isSelected ? 'selected' : ''}" 
                      data-product-id="${product.id}" 
-                     onclick="adminCategoryManager.toggleProductSelection('${product.id}')">
+                     onclick="adminCategoryManager.selectProduct('${product.id}')">
                     <img src="${product.img || product.imgUrl?.[0] || 'Logo/1000163691.jpg'}" 
                          alt="${product.name}" 
                          onerror="this.src='../Logo/1000163691.jpg'">
@@ -643,6 +643,9 @@ class AdminCategoryManager {
                                         <button class="btn btn-sm btn-warning" onclick="adminCategoryManager.editProductCategories('${product.id}')">
                                             <i class="fas fa-edit"></i> Edit Categories
                                         </button>
+                                        <button class="btn btn-sm btn-danger" onclick="adminCategoryManager.removeProductFromCategory('${product.id}', '${categoryId}', '${categoryName}')">
+                                            <i class="fas fa-minus-circle"></i> Remove from Category
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -727,8 +730,9 @@ class AdminCategoryManager {
         }
     }
 
-    toggleProductSelection(productId) {
-        console.log('🔄 Toggling product selection:', productId);
+    // Individual product selection (click on product card)
+    selectProduct(productId) {
+        console.log('🔄 Selecting/deselecting product:', productId);
         
         if (this.selectedProducts.has(productId)) {
             this.selectedProducts.delete(productId);
@@ -774,17 +778,7 @@ class AdminCategoryManager {
         this.updateAssignmentForm();
     }
 
-    toggleProductSelectionAll() {
-        const allSelected = this.filteredProducts.every(product => 
-            this.selectedProducts.has(product.id)
-        );
-        
-        if (allSelected) {
-            this.clearAllProducts();
-        } else {
-            this.selectAllProducts();
-        }
-    }
+    // Removed toggleProductSelectionAll - use selectAllProducts() or clearAllProducts() directly
 
     updateSelectionCount() {
         const countElement = document.getElementById('selectionCount');
@@ -989,283 +983,33 @@ class AdminCategoryManager {
         }
     }
 
+    // Load categories for single product selection
     loadSingleProductCategories() {
         if (this.selectedProducts.size !== 1) return;
         
-        // Get the single selected product
         const productId = Array.from(this.selectedProducts)[0];
         const product = this.products.find(p => p.id === productId);
         
-        if (!product) {
-            console.error('Product not found for ID:', productId);
-            return;
-        }
+        if (!product) return;
 
-        const productCategories = product.categories || [];
-        console.log(`\n🔍 Loading categories for single product: ${product.name}`);
-        console.log('🏷️ Product categories:', productCategories);
-        console.log('📦 Full product object:', product);
-        
         // Clear all checkboxes first
         this.clearCategoryCheckboxes();
         
-        // Update checkboxes to show current product categories
-        console.log('=== ENHANCED SINGLE PRODUCT CATEGORY MATCHING ===');
-        console.log('Available system categories:', this.categories.map(c => ({ 
-            name: c.name, 
-            id: c.id, 
-            categoryId: c.categoryId,
-            color: c.color 
-        })));
-        
-        // Double-check that checkboxes container exists and has content
-        const container = document.getElementById('categoriesCheckboxes');
-        if (!container) {
-            console.error('❌ categoriesCheckboxes container not found!');
-            return;
-        }
-        
-        const allCheckboxes = container.querySelectorAll('input[type="checkbox"]');
-        console.log(`📋 Found ${allCheckboxes.length} checkboxes in DOM`);
-        
-        if (allCheckboxes.length === 0) {
-            console.error('❌ No checkboxes found in container - re-rendering...');
-            this.renderCategoryCheckboxes();
-            // Wait a bit more and try again
-            setTimeout(() => this.loadSingleProductCategories(), 200);
-            return;
-        }
-        
-        console.log('✅ DOM is ready, proceeding with category matching...');
-        
-        let foundCategories = 0;
-        let matchingResults = [];
+        // Check categories that match the product
+        const productCategories = product.categories || [];
         
         this.categories.forEach(category => {
             const categoryIdentifier = category.categoryId || category.id;
             const checkbox = document.getElementById(`cat_${categoryIdentifier}`);
             
-            console.log(`\n🔎 Analyzing category: "${category.name}"`);
-            console.log(`   System ID: ${category.id}`);
-            console.log(`   Category ID: ${category.categoryId}`);
-            console.log(`   Identifier: ${categoryIdentifier}`);
-            console.log(`   Checkbox found: ${!!checkbox}`);
-            
             if (checkbox) {
-                // STRICT EXACT MATCHING ONLY - no fuzzy matching to avoid false positives
-                let hasCategory = false;
-                let matchReason = '';
-                
-                // Check each product category against this system category
-                for (const productCategory of productCategories) {
-                    const prodCat = String(productCategory).trim();
-                    
-                    console.log(`      Testing: "${prodCat}" vs "${category.name}" (${categoryIdentifier})`);
-                    
-                    // Method 1: Exact match with category identifier (most reliable)
-                    if (prodCat === categoryIdentifier) {
-                        hasCategory = true;
-                        matchReason = `Exact ID match: "${prodCat}" === "${categoryIdentifier}"`;
-                        break;
-                    }
-                    
-                    // Method 2: Exact match with category.id 
-                    if (prodCat === category.id) {
-                        hasCategory = true;
-                        matchReason = `Exact category.id match: "${prodCat}" === "${category.id}"`;
-                        break;
-                    }
-                    
-                    // Method 3: Special case for Today's Offers
-                    if (category.name === "Today's Offers" && prodCat === "today offer") {
-                        hasCategory = true;
-                        matchReason = `Special mapping: "${prodCat}" → "Today's Offers"`;
-                        break;
-                    }
-                    
-                    // Method 4: Exact case-insensitive name match
-                    if (prodCat.toLowerCase() === category.name.toLowerCase()) {
-                        hasCategory = true;
-                        matchReason = `Exact name match: "${prodCat}" === "${category.name}"`;
-                        break;
-                    }
-                    
-                    // Method 5: Handle common variations (controlled list)
-                    const commonMappings = {
-                        'watch': ['smartwatch', 'watches'],
-                        'smartwatch': ['watch', 'smart watch'],
-                        'shoes': ['shoe', 'sneakers', 'sneaker'],
-                        'today offer': ["today's offers", 'today offers', 'todays offers']
-                    };
-                    
-                    const prodCatLower = prodCat.toLowerCase();
-                    const categoryNameLower = category.name.toLowerCase();
-                    
-                    // Check if product category maps to this system category
-                    if (commonMappings[prodCatLower] && commonMappings[prodCatLower].includes(categoryNameLower)) {
-                        hasCategory = true;
-                        matchReason = `Common mapping: "${prodCat}" → "${category.name}"`;
-                        break;
-                    }
-                    
-                    // Check reverse mapping (system category maps to product category)
-                    if (commonMappings[categoryNameLower] && commonMappings[categoryNameLower].includes(prodCatLower)) {
-                        hasCategory = true;
-                        matchReason = `Reverse mapping: "${category.name}" → "${prodCat}"`;
-                        break;
-                    }
-                }
-                
-                console.log(`   ✅ Final match result: ${hasCategory}`);
-                if (matchReason) {
-                    console.log(`   📝 Match reason: ${matchReason}`);
-                }
-                
-                // Set checkbox state and track results
+                const hasCategory = this.isProductInCategory(productCategories, category);
                 checkbox.checked = hasCategory;
-                
-                if (hasCategory) {
-                    console.log(`   🎉 CATEGORY MATCHED: "${category.name}" - CHECKBOX SET TO CHECKED`);
-                    foundCategories++;
-                    
-                    matchingResults.push({
-                        categoryName: category.name,
-                        matchReason: matchReason,
-                        productCategories: productCategories
-                    });
-                } else {
-                    console.log(`   ❌ No match for "${category.name}" - CHECKBOX SET TO UNCHECKED`);
-                }
-                
-                // Force a visual update to ensure the checkbox state is visible
-                if (hasCategory) {
-                    checkbox.setAttribute('checked', 'checked');
-                } else {
-                    checkbox.removeAttribute('checked');
-                }
-                
-                // Add visual indication for existing categories
-                const categoryDiv = checkbox.closest('.category-checkbox');
-                if (categoryDiv) {
-                    if (hasCategory) {
-                        categoryDiv.style.setProperty('background', 'rgba(34, 197, 94, 0.15)', 'important');
-                        categoryDiv.style.setProperty('border-color', '#22c55e', 'important');
-                        categoryDiv.style.setProperty('border-width', '2px', 'important');
-                        categoryDiv.style.setProperty('box-shadow', '0 2px 8px rgba(34, 197, 94, 0.3)', 'important');
-                        categoryDiv.title = `✅ Product belongs to "${category.name}" category`;
-                        categoryDiv.classList.add('has-existing-category');
-                        console.log(`   🎨 Applied green highlight to ${category.name}`);
-                    } else {
-                        categoryDiv.style.removeProperty('background');
-                        categoryDiv.style.removeProperty('border-color');
-                        categoryDiv.style.removeProperty('border-width');
-                        categoryDiv.style.removeProperty('box-shadow');
-                        categoryDiv.style.background = 'white';
-                        categoryDiv.style.borderColor = '#e9ecef';
-                        categoryDiv.title = `❌ Product not in "${category.name}" category`;
-                        categoryDiv.classList.remove('has-existing-category');
-                    }
-                }
-            } else {
-                console.error(`❌ Checkbox element not found for: ${category.name} (${categoryIdentifier})`);
             }
         });
-        
-        console.log(`\n📊 === ENHANCED MATCHING SUMMARY ===`);
-        console.log(`🏷️ Product "${product.name}" has ${productCategories.length} categories:`, productCategories);
-        console.log(`✅ Successfully matched ${foundCategories} categories in UI`);
-        console.log(`🎯 Detailed matches:`, matchingResults);
-        
-        if (foundCategories === 0 && productCategories.length > 0) {
-            console.warn(`⚠️ WARNING: Product has ${productCategories.length} categories but none matched!`);
-            console.log(`🔧 This may indicate a data format mismatch. Product categories:`, productCategories);
-            console.log(`🔧 Available system categories:`, this.categories.map(c => c.name));
-        }
-        
-        // Final verification - check what checkboxes are actually checked
-        setTimeout(() => {
-            const actuallyChecked = document.querySelectorAll('.category-checkbox:checked');
-            console.log(`🔍 FINAL VERIFICATION: ${actuallyChecked.length} checkboxes are actually checked in DOM:`);
-            actuallyChecked.forEach((cb, i) => {
-                console.log(`  [${i+1}]: ${cb.value} (id: ${cb.id})`);
-            });
-            
-            if (actuallyChecked.length === 0 && productCategories.length > 0) {
-                console.warn(`⚠️ CRITICAL: No checkboxes checked but product has ${productCategories.length} categories!`);
-                console.log(`🔧 Re-attempting category loading...`);
-                // Try once more
-                this.loadSingleProductCategories();
-            }
-        }, 100);
 
-        console.log('=== END ENHANCED SINGLE PRODUCT UPDATE ===');
 
-        // Show information about existing categories using the enhanced matching
-        const existingCategories = this.categories.filter(category => {
-            const categoryIdentifier = category.categoryId || category.id;
-            return productCategories.includes(categoryIdentifier) ||
-                   productCategories.includes(category.id) ||
-                   productCategories.includes(category.name) ||
-                   productCategories.includes(category.name.toLowerCase()) ||
-                   productCategories.some(prodCat => {
-                       if (typeof prodCat === 'string' && typeof category.name === 'string') {
-                           return prodCat.toLowerCase().trim() === category.name.toLowerCase().trim();
-                       }
-                       return false;
-                   });
-        });
 
-        console.log('📋 UI-detected existing categories:', existingCategories.map(c => c.name));
-        
-        // Check for orphaned categories
-        const validCategoryIds = new Set();
-        this.categories.forEach(category => {
-            const categoryIdentifier = category.categoryId || category.id;
-            validCategoryIds.add(categoryIdentifier);
-            validCategoryIds.add(category.id);
-            validCategoryIds.add(category.name);
-            validCategoryIds.add(category.name.toLowerCase());
-            if (category.name === "Today's Offers") {
-                validCategoryIds.add("today offer");
-            }
-        });
-        
-        const orphanedCategories = productCategories.filter(prodCat => !validCategoryIds.has(prodCat));
-        
-        if (orphanedCategories.length > 0) {
-            console.warn(`⚠️ ORPHANED CATEGORIES DETECTED: ${orphanedCategories.join(', ')}`);
-            console.log(`   These categories exist in "${product.name}" but are not in the system category list`);
-            console.log(`   Run cleanProductCategories('${product.id}', false) to remove them`);
-            
-            // Show warning in the info container
-            this.showSingleProductCategoriesInfo(
-                existingCategories.length, 
-                product.name, 
-                existingCategories.map(c => c.name),
-                orphanedCategories
-            );
-        } else {
-            this.showSingleProductCategoriesInfo(existingCategories.length, product.name, existingCategories.map(c => c.name));
-        }
-        
-        // Force another update after a brief delay to ensure visibility
-        setTimeout(() => {
-            this.forceCheckboxUpdate(productCategories);
-        }, 300);
-        
-        // Add an additional debug update after more time
-        setTimeout(() => {
-            console.log('🔄 Final verification - checking checkbox states...');
-            const finalCheckboxes = container.querySelectorAll('input[type="checkbox"]');
-            finalCheckboxes.forEach(cb => {
-                const categoryName = cb.getAttribute('data-category-name');
-                if (cb.checked) {
-                    console.log(`✅ Final check - "${categoryName}" is checked`);
-                } else {
-                    console.log(`❌ Final check - "${categoryName}" is unchecked`);
-                }
-            });
-        }, 800);
     }
 
     forceCheckboxUpdate(productCategories) {
@@ -1652,97 +1396,53 @@ class AdminCategoryManager {
         }
     }
 
+    // Save categories for single product
     async saveProductCategories() {
-        console.log('💾 === STARTING SINGLE PRODUCT SAVE ===');
-        console.log('📊 Selected products count:', this.selectedProducts.size);
-        console.log('📦 Current selectedProduct:', this.selectedProduct?.name);
+        console.log('� Saving categories for single product...');
         
-        // Ensure we have the correct single product reference
         if (this.selectedProducts.size !== 1) {
-            this.showMessage('Please select exactly one product for single product category assignment.', 'error');
-            return;
-        }
-        
-        if (!this.selectedProduct) {
-            // Try to recover the selectedProduct reference
-            const selectedProductId = Array.from(this.selectedProducts)[0];
-            this.selectedProduct = this.products.find(p => p.id === selectedProductId);
-            console.log('🔧 Recovered selectedProduct:', this.selectedProduct?.name);
-        }
-        
-        if (!this.selectedProduct) {
-            this.showMessage('Error: Could not find the selected product. Please try selecting the product again.', 'error');
+            this.showMessage('Please select exactly one product.', 'error');
             return;
         }
 
-        console.log('✅ Product confirmed:', this.selectedProduct.name);
-        console.log('🏷️ Current categories:', this.selectedProduct.categories);
-
-        // Collect ONLY the checked categories - this will be the complete new category list
-        const selectedCategories = [];
+        const productId = Array.from(this.selectedProducts)[0];
+        const product = this.products.find(p => p.id === productId);
         
-        this.categories.forEach(category => {
-            const categoryIdentifier = category.categoryId || category.id;
-            const checkbox = document.getElementById(`cat_${categoryIdentifier}`);
-            
-            if (checkbox && checkbox.checked) {
-                // Use the same identifier format that was used for loading
-                let categoryToSave = categoryIdentifier;
-                
-                // Special handling for Today's Offers
-                if (category.name === "Today's Offers") {
-                    categoryToSave = "today offer";
-                }
-                
-                console.log(`✅ Adding to save list: "${category.name}" → "${categoryToSave}"`);
-                selectedCategories.push(categoryToSave);
-            } else if (checkbox) {
-                console.log(`❌ Excluding from save: "${category.name}" (not checked)`);
-            }
-        });
+        if (!product) {
+            this.showMessage('Product not found.', 'error');
+            return;
+        }
 
-        console.log('🎯 Final categories to save:', selectedCategories);
-        console.log('📊 Total selected:', selectedCategories.length);
-
-        // The selectedCategories array IS the complete new category list
-        // Firebase will replace the entire categories array, automatically removing any not listed
-        const finalCategories = selectedCategories;
-
-        console.log('Final categories to save:', finalCategories);
+        // Get selected categories from checkboxes (this replaces all categories)
+        const selectedCategories = this.getSelectedCategories();
+        
+        console.log(`Updating ${product.name} with categories:`, selectedCategories);
+        console.log(`Previous categories:`, product.categories || []);
 
         try {
-            // Update product in database
-            if (typeof db !== 'undefined') {
-                await db.collection('products').doc(this.selectedProduct.id).update({
-                    categories: finalCategories,
-                    updatedAt: new Date().toISOString()
-                });
-                console.log('Database updated successfully');
-            }
+            // Update in database - this completely replaces the categories array
+            await db.collection('products').doc(productId).update({
+                categories: selectedCategories,
+                lastModified: new Date()
+            });
 
-            // Update local product data
-            this.selectedProduct.categories = finalCategories;
-            const productIndex = this.products.findIndex(p => p.id === this.selectedProduct.id);
-            if (productIndex > -1) {
-                this.products[productIndex].categories = finalCategories;
-            }
-
-            console.log('Local product data updated');
-            this.showMessage('Product categories updated successfully! Selected categories applied, deselected categories removed.', 'success');
-            this.renderCategoriesTable(); // Update product counts
-            console.log('=== SINGLE PRODUCT SAVE COMPLETE ===');
+            // Update local data
+            product.categories = selectedCategories;
+            
+            this.showMessage(`Updated "${product.name}" with ${selectedCategories.length} categories.`, 'success');
+            this.renderCategoriesTable();
+            
         } catch (error) {
-            console.error('Error saving product categories:', error);
-            this.showMessage('Error saving categories. Please try again.', 'error');
+            console.error('Error saving categories:', error);
+            this.showMessage('Error saving categories.', 'error');
         }
     }
 
     async saveBulkProductCategories() {
-        console.log('=== STARTING BULK CATEGORY ASSIGNMENT ===');
-        console.log('Selected products:', this.selectedProducts.size);
+        console.log('💾 Saving categories for multiple products...');
         
         if (this.selectedProducts.size === 0) {
-            this.showMessage('No products selected for bulk assignment.', 'error');
+            this.showMessage('No products selected.', 'error');
             return;
         }
 
@@ -1751,50 +1451,14 @@ class AdminCategoryManager {
         console.log('categoriesCheckboxes container:', container);
         console.log('Container HTML:', container ? container.innerHTML.substring(0, 200) + '...' : 'NOT FOUND');
 
-        // Get ALL categories and their checkbox states (both selected and deselected)
-        const selectedCategories = [];
-        const deselectedCategories = [];
-        console.log('Available categories:', this.categories.length);
-        console.log('Categories:', this.categories.map(c => ({ name: c.name, id: c.id, categoryId: c.categoryId })));
+        const selectedCategories = this.getSelectedCategories();
         
-        this.categories.forEach(category => {
-            const categoryIdentifier = category.categoryId || category.id;
-            const checkbox = document.getElementById(`cat_${categoryIdentifier}`);
-            console.log(`Checking category: ${category.name}, ID: ${categoryIdentifier}, Checkbox found: ${!!checkbox}, Checked: ${checkbox ? checkbox.checked : 'N/A'}`);
-            
-            if (checkbox) {
-                const categoryToProcess = category.categoryId ? category.categoryId : 
-                                        category.id ? category.id : category.name;
-                
-                // Special handling for Today's Offers
-                const finalCategoryName = category.name === "Today's Offers" ? "today offer" : categoryToProcess;
-                
-                if (checkbox.checked) {
-                    selectedCategories.push(finalCategoryName);
-                    console.log('Selected category:', category.name, '(ID:', finalCategoryName, ')');
-                } else {
-                    deselectedCategories.push(finalCategoryName);
-                    console.log('Deselected category:', category.name, '(ID:', finalCategoryName, ')');
-                }
-            }
-        });
-
-        console.log('Total selected categories:', selectedCategories.length);
-        console.log('Total deselected categories:', deselectedCategories.length);
-        console.log('Selected categories:', selectedCategories);
-        console.log('Deselected categories:', deselectedCategories);
-
-        // Allow processing even if no categories are selected (for removal operations)
-        if (selectedCategories.length === 0 && deselectedCategories.length === 0) {
-            console.log('DEBUG: Forcing category checkboxes re-render...');
-            this.renderCategoryCheckboxes();
-            this.showMessage('No category changes detected. Please select or deselect categories to make changes.', 'error');
+        if (selectedCategories.length === 0) {
+            this.showMessage('Please select at least one category.', 'error');
             return;
         }
 
-        // Get assignment mode
-        const assignmentMode = document.querySelector('input[name="assignmentMode"]:checked')?.value || 'add';
-        console.log('Assignment mode:', assignmentMode);
+
         
         // Get full product objects from selected IDs
         const productArray = Array.from(this.selectedProducts)
@@ -1811,40 +1475,20 @@ class AdminCategoryManager {
             // Process each product
             for (const product of productArray) {
                 try {
-                    console.log(`Processing product: ${product.name} (ID: ${product.id})`);
-                    console.log(`Current product categories:`, product.categories || []);
+                    const assignmentMode = document.querySelector('input[name="assignmentMode"]:checked')?.value || 'replace';
                     let finalCategories = [];
                     
                     if (assignmentMode === 'replace') {
-                        // Replace existing categories with only selected ones
+                        // Replace mode: use only selected categories
                         finalCategories = [...selectedCategories];
-                        console.log(`Replacing categories for ${product.name}:`, finalCategories);
-                    } else {
-                        // Add/Remove mode: Start with existing categories
+                    } else if (assignmentMode === 'remove') {
+                        // Remove mode: remove selected categories from existing ones
                         const existingCategories = product.categories || [];
-                        console.log(`Existing categories for ${product.name}:`, existingCategories);
-                        
-                        // Add selected categories that aren't already present
-                        let updatedCategories = [...existingCategories];
-                        selectedCategories.forEach(category => {
-                            if (!updatedCategories.includes(category)) {
-                                updatedCategories.push(category);
-                                console.log(`Adding category "${category}" to ${product.name}`);
-                            }
-                        });
-                        
-                        // Remove deselected categories that are currently present
-                        deselectedCategories.forEach(category => {
-                            const index = updatedCategories.indexOf(category);
-                            if (index > -1) {
-                                updatedCategories.splice(index, 1);
-                                console.log(`Removing category "${category}" from ${product.name}`);
-                            }
-                        });
-                        
-                        // Remove duplicates and set final categories
-                        finalCategories = [...new Set(updatedCategories)];
-                        console.log(`Final categories for ${product.name}:`, finalCategories);
+                        finalCategories = existingCategories.filter(cat => !selectedCategories.includes(cat));
+                    } else {
+                        // Add mode: add selected categories to existing ones
+                        const existingCategories = product.categories || [];
+                        finalCategories = [...new Set([...existingCategories, ...selectedCategories])];
                     }
 
                     // Update product in database
@@ -1875,14 +1519,10 @@ class AdminCategoryManager {
             }
 
             // Show results
-            console.log(`Bulk assignment complete. Success: ${successCount}, Errors: ${errorCount}`);
-            const modeDescription = assignmentMode === 'replace' ? 'replaced categories' : 
-                                   `added ${selectedCategories.length} and removed ${deselectedCategories.length} categories`;
-            
             if (errorCount === 0) {
-                this.showMessage(`Successfully ${modeDescription} for ${successCount} products!`, 'success');
+                this.showMessage(`Successfully updated ${successCount} products!`, 'success');
             } else {
-                this.showMessage(`${modeDescription} for ${successCount} products successfully, ${errorCount} failed.`, 'error');
+                this.showMessage(`Updated ${successCount} products, ${errorCount} failed.`, 'error');
             }
 
             // Clear selection and refresh
@@ -1895,6 +1535,170 @@ class AdminCategoryManager {
             console.error('Error in bulk category assignment:', error);
             console.error('Error stack:', error.stack);
             this.showMessage('Error processing bulk assignment. Please try again.', 'error');
+        }
+    }
+
+    // Helper function to get selected categories from checkboxes
+    getSelectedCategories() {
+        const selectedCategories = [];
+        
+        this.categories.forEach(category => {
+            const categoryIdentifier = category.categoryId || category.id;
+            const checkbox = document.getElementById(`cat_${categoryIdentifier}`);
+            
+            if (checkbox && checkbox.checked) {
+                // Handle special mappings
+                if (category.name === "Today's Offers") {
+                    selectedCategories.push("today offer");
+                } else {
+                    selectedCategories.push(categoryIdentifier);
+                }
+            }
+        });
+        
+        return selectedCategories;
+    }
+
+    // Helper function to check if product has a category
+    isProductInCategory(productCategories, category) {
+        if (!productCategories || !Array.isArray(productCategories)) {
+            return false;
+        }
+
+        const categoryIdentifier = category.categoryId || category.id;
+        
+        // Check various matching patterns
+        return productCategories.some(prodCat => {
+            const pc = String(prodCat).trim();
+            
+            // Exact matches
+            if (pc === categoryIdentifier || pc === category.id || pc === category.name) {
+                return true;
+            }
+            
+            // Case insensitive name match
+            if (pc.toLowerCase() === category.name.toLowerCase()) {
+                return true;
+            }
+            
+            // Special case for Today's Offers
+            if (category.name === "Today's Offers" && pc === "today offer") {
+                return true;
+            }
+            
+            return false;
+        });
+    }
+
+    async removeProductCategories() {
+        console.log('🗑️ Removing categories from products...');
+        
+        if (this.selectedProducts.size === 0) {
+            this.showMessage('No products selected.', 'error');
+            return;
+        }
+
+        const selectedCategories = this.getSelectedCategories();
+        
+        if (selectedCategories.length === 0) {
+            this.showMessage('Please select at least one category to remove.', 'error');
+            return;
+        }
+
+        const productArray = Array.from(this.selectedProducts)
+            .map(productId => this.products.find(p => p.id === productId))
+            .filter(product => product !== undefined);
+
+        let successCount = 0;
+        let errorCount = 0;
+
+        try {
+            for (const product of productArray) {
+                try {
+                    const existingCategories = product.categories || [];
+                    const finalCategories = existingCategories.filter(cat => !selectedCategories.includes(cat));
+
+                    // Update in database
+                    if (typeof db !== 'undefined') {
+                        await db.collection('products').doc(product.id).update({
+                            categories: finalCategories,
+                            updatedAt: new Date().toISOString()
+                        });
+                    }
+
+                    // Update local data
+                    product.categories = finalCategories;
+                    const productIndex = this.products.findIndex(p => p.id === product.id);
+                    if (productIndex > -1) {
+                        this.products[productIndex].categories = finalCategories;
+                    }
+
+                    successCount++;
+                } catch (error) {
+                    console.error(`Error removing categories from product ${product.name}:`, error);
+                    errorCount++;
+                }
+            }
+
+            if (errorCount === 0) {
+                this.showMessage(`Successfully removed categories from ${successCount} products!`, 'success');
+            } else {
+                this.showMessage(`Removed categories from ${successCount} products, ${errorCount} failed.`, 'error');
+            }
+
+            this.clearAllProducts();
+            this.renderCategoriesTable();
+
+        } catch (error) {
+            console.error('Error in removeProductCategories:', error);
+            this.showMessage('Error removing categories.', 'error');
+        }
+    }
+
+    async removeProductFromCategory(productId, categoryId, categoryName) {
+        if (!confirm(`Remove this product from "${categoryName}" category?`)) {
+            return;
+        }
+
+        try {
+            const product = this.products.find(p => p.id === productId);
+            if (!product) {
+                this.showMessage('Product not found.', 'error');
+                return;
+            }
+
+            const existingCategories = product.categories || [];
+            
+            // Find the category identifier to remove
+            const category = this.categories.find(cat => cat.id === categoryId);
+            const categoryToRemove = category ? (category.name === "Today's Offers" ? "today offer" : (category.categoryId || category.id)) : categoryId;
+            
+            const finalCategories = existingCategories.filter(cat => cat !== categoryToRemove);
+
+            // Update in database
+            if (typeof db !== 'undefined') {
+                await db.collection('products').doc(productId).update({
+                    categories: finalCategories,
+                    updatedAt: new Date().toISOString()
+                });
+            }
+
+            // Update local data
+            product.categories = finalCategories;
+            const productIndex = this.products.findIndex(p => p.id === productId);
+            if (productIndex > -1) {
+                this.products[productIndex].categories = finalCategories;
+            }
+
+            this.showMessage(`Removed product from "${categoryName}" category!`, 'success');
+            this.renderCategoriesTable();
+            
+            // Close the modal and refresh the category view
+            document.getElementById('categoryProductsModal').style.display = 'none';
+
+        } catch (error) {
+            console.error('Error removing product from category:', error);
+            this.showMessage('Error removing product from category.', 'error');
         }
     }
 
@@ -2253,9 +2057,9 @@ function clearAllProducts() {
     }
 }
 
-function toggleProductSelection(product) {
+function selectProduct(productId) {
     if (typeof adminCategoryManager !== 'undefined') {
-        adminCategoryManager.toggleProductSelection(product);
+        adminCategoryManager.selectProduct(productId);
     }
 }
 
@@ -2296,6 +2100,15 @@ function debugProductCategories(productId = null) {
 function cleanProductCategories(productId = null, dryRun = true) {
     if (typeof adminCategoryManager !== 'undefined') {
         adminCategoryManager.cleanProductCategories(productId, dryRun);
+    } else {
+        console.error('AdminCategoryManager not available');
+    }
+}
+
+// Remove categories from selected products
+function removeProductCategories() {
+    if (typeof adminCategoryManager !== 'undefined') {
+        adminCategoryManager.removeProductCategories();
     } else {
         console.error('AdminCategoryManager not available');
     }

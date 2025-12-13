@@ -167,6 +167,180 @@
             font-family: inherit;
         }
 
+        /* Image Upload Styles */
+        .image-upload-container {
+            margin-top: 10px;
+        }
+
+        .upload-method-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 20px;
+            background: #f3f4f6;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            background: #e5e7eb;
+            border-color: #d1d5db;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .upload-section {
+            display: none;
+        }
+
+        .upload-section.active {
+            display: block;
+        }
+
+        .file-drop-zone {
+            border: 3px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            background: #f8fafc;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .file-drop-zone:hover {
+            border-color: #667eea;
+            background: #f1f5f9;
+        }
+
+        .file-drop-zone.drag-over {
+            border-color: #667eea;
+            background: #eef2ff;
+            transform: scale(1.02);
+        }
+
+        .file-drop-zone i {
+            font-size: 3rem;
+            color: #94a3b8;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .file-drop-zone p {
+            color: #64748b;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        .browse-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .browse-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .image-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .preview-card {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .preview-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .preview-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .preview-card .remove-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .preview-card .remove-btn:hover {
+            background: rgba(220, 38, 38, 1);
+            transform: scale(1.1);
+        }
+
+        .preview-card .file-info {
+            padding: 8px;
+            font-size: 0.75rem;
+            color: #64748b;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .preview-card .compression-badge {
+            position: absolute;
+            bottom: 45px;
+            left: 8px;
+            background: rgba(16, 185, 129, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
         /* Button Styles */
         .add-image-btn {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
@@ -1228,7 +1402,7 @@
 
 <!-- SIDEBAR NAV (Desktop) -->
 <nav class="sidebar">
-    <div class="sidebar-logo">NSS Admin</div>
+    <div class="sidebar-logo">WackyKicks Admin</div>
     <ul class="sidebar-links">
         <li><a href="./index.html" id="nav-admin"><i class="fa-solid fa-user-tie"></i> Dashboard</a></li>
         <li><a href="./categories.html" id="nav-categories"><i class="fa-solid fa-tags"></i> Categories</a></li>
@@ -1408,8 +1582,38 @@
     </div>
 
     <div class="form-group">
-        <label>Image URLs (comma separated)</label>
-        <input type="text" id="multiImageInput" placeholder="Eg: https://url1.jpg, https://url2.jpg">
+        <label>Product Images</label>
+        <div class="image-upload-container">
+            <div class="upload-method-tabs">
+                <button type="button" class="tab-btn active" onclick="switchUploadMethod('file')">
+                    <i class="fas fa-upload"></i> Upload Images
+                </button>
+                <button type="button" class="tab-btn" onclick="switchUploadMethod('url')">
+                    <i class="fas fa-link"></i> Image URLs
+                </button>
+            </div>
+            
+            <!-- File Upload Section -->
+            <div id="fileUploadSection" class="upload-section active">
+                <div class="file-drop-zone" id="fileDropZone">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Drag & drop images here or click to browse</p>
+                    <input type="file" id="imageFileInput" accept="image/*" multiple style="display: none;">
+                    <button type="button" class="browse-btn" onclick="event.stopPropagation(); document.getElementById('imageFileInput').click()">
+                        <i class="fas fa-folder-open"></i> Browse Files
+                    </button>
+                </div>
+                <div id="imagePreviewContainer" class="image-preview-grid"></div>
+            </div>
+            
+            <!-- URL Input Section -->
+            <div id="urlUploadSection" class="upload-section">
+                <input type="text" id="multiImageInput" placeholder="Eg: https://url1.jpg, https://url2.jpg">
+                <small style="color: #666; display: block; margin-top: 5px;">
+                    <i class="fas fa-info-circle"></i> Enter comma-separated image URLs
+                </small>
+            </div>
+        </div>
     </div>
 
     <div class="form-group">
@@ -1763,6 +1967,210 @@ function resetForm() {
     editMode = false;
     editingProductId = null;
     document.querySelector(".submit-btn").innerText = "Add Product";
+    
+    // Clear uploaded images
+    uploadedImages = [];
+    updateImagePreview();
+}
+
+// Image Upload Functionality
+let uploadedImages = [];
+let currentUploadMethod = 'file';
+
+window.switchUploadMethod = function(method) {
+    currentUploadMethod = method;
+    
+    // Update active tabs
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Add active class to clicked button
+    if (method === 'file') {
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+    } else {
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+    }
+    
+    // Show/hide sections
+    document.getElementById('fileUploadSection').classList.toggle('active', method === 'file');
+    document.getElementById('urlUploadSection').classList.toggle('active', method === 'url');
+}
+
+// File input handler
+document.getElementById('imageFileInput').addEventListener('change', async function(e) {
+    const files = Array.from(e.target.files);
+    await processImageFiles(files);
+});
+
+// Drag and drop handlers
+const dropZone = document.getElementById('fileDropZone');
+
+dropZone.addEventListener('click', function(e) {
+    // Only trigger if clicking the drop zone itself, not the button
+    if (e.target === dropZone || e.target.tagName === 'I' || e.target.tagName === 'P') {
+        document.getElementById('imageFileInput').click();
+    }
+});
+
+dropZone.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    dropZone.classList.add('drag-over');
+});
+
+dropZone.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+});
+
+dropZone.addEventListener('drop', async function(e) {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    
+    const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+    await processImageFiles(files);
+});
+
+// Process and compress images
+async function processImageFiles(files) {
+    if (files.length === 0) return;
+    
+    for (const file of files) {
+        try {
+            // Show loading state
+            const tempId = Date.now() + Math.random();
+            uploadedImages.push({
+                id: tempId,
+                loading: true,
+                name: file.name
+            });
+            updateImagePreview();
+            
+            // Compress and convert to base64
+            const base64 = await compressImage(file);
+            
+            // Replace loading state with actual image
+            const index = uploadedImages.findIndex(img => img.id === tempId);
+            uploadedImages[index] = {
+                id: tempId,
+                base64: base64,
+                name: file.name,
+                size: file.size,
+                compressedSize: Math.round((base64.length * 3) / 4) // Approximate size
+            };
+            
+            updateImagePreview();
+        } catch (error) {
+            console.error('Error processing image:', error);
+            if (window.FloatingAlertManager) {
+                window.alerts.error(`Failed to process ${file.name}`, 'Upload Error');
+            }
+        }
+    }
+}
+
+// Compress image to base64
+function compressImage(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            const img = new Image();
+            
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Calculate new dimensions (max 1200px width/height)
+                let width = img.width;
+                let height = img.height;
+                const maxSize = 1200;
+                
+                if (width > maxSize || height > maxSize) {
+                    if (width > height) {
+                        height = (height / width) * maxSize;
+                        width = maxSize;
+                    } else {
+                        width = (width / height) * maxSize;
+                        height = maxSize;
+                    }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                // Draw and compress
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Convert to base64 with quality adjustment
+                let quality = 0.8;
+                let base64 = canvas.toDataURL('image/jpeg', quality);
+                
+                // If still too large (>400KB), reduce quality
+                while (base64.length > 400000 && quality > 0.3) {
+                    quality -= 0.1;
+                    base64 = canvas.toDataURL('image/jpeg', quality);
+                }
+                
+                resolve(base64);
+            };
+            
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+// Update image preview
+function updateImagePreview() {
+    const container = document.getElementById('imagePreviewContainer');
+    
+    if (uploadedImages.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    container.innerHTML = uploadedImages.map(img => {
+        if (img.loading) {
+            return `
+                <div class="preview-card">
+                    <div style="height: 150px; display: flex; align-items: center; justify-content: center; background: #f1f5f9;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #667eea;"></i>
+                    </div>
+                    <div class="file-info">${img.name}</div>
+                </div>
+            `;
+        }
+        
+        const compressionPercent = Math.round((1 - img.compressedSize / img.size) * 100);
+        
+        return `
+            <div class="preview-card">
+                <img src="${img.base64}" alt="${img.name}">
+                ${compressionPercent > 0 ? `<div class="compression-badge">-${compressionPercent}%</div>` : ''}
+                <button type="button" class="remove-btn" onclick="removeImage(${img.id})">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="file-info">${formatFileSize(img.compressedSize)}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Remove image
+window.removeImage = function(id) {
+    uploadedImages = uploadedImages.filter(img => img.id !== id);
+    updateImagePreview();
+};
+
+// Format file size
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
 // Load products
@@ -1778,6 +2186,18 @@ async function loadProducts() {
                 id: docSnap.id,
                 ...product
             });
+        });
+        
+        // Sort products: newest first (with createdAt), then existing products
+        allProducts.sort((a, b) => {
+            if (a.createdAt && b.createdAt) {
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            } else if (a.createdAt) {
+                return -1; // a comes first
+            } else if (b.createdAt) {
+                return 1; // b comes first
+            }
+            return 0; // keep existing order for products without createdAt
         });
         
         displayProducts(allProducts);
@@ -1820,7 +2240,7 @@ function displayProducts(products) {
 
         // Check if product is out of stock (by category or stock field)
         const isOutOfStockByCategory = product.categories && product.categories.includes('out-of-stock');
-        const isOutOfStockByStock = product.stock !== undefined && product.stock <= 0;
+        const isOutOfStockByStock = product.stock !== undefined && product.stock !== null && product.stock === 0;
         const isOutOfStock = isOutOfStockByCategory || isOutOfStockByStock;
 
         // Calculate discount percentage for admin display
@@ -1851,11 +2271,22 @@ window.submitProduct = async () => {
     const oldPrice = oldPriceInput.value.trim();
     const newPrice = newPriceInput.value.trim();
     const price = newPrice;
-    const stock = parseInt(stockInput.value) || 0;
-    const imgUrl = document.getElementById("multiImageInput").value
-        .split(',')
-        .map(url => url.trim())
-        .filter(url => url);
+    const stockValue = stockInput.value.trim();
+    const stock = stockValue !== '' ? parseInt(stockValue) : undefined;
+    
+    // Get images based on upload method
+    let imgUrl = [];
+    if (currentUploadMethod === 'file') {
+        imgUrl = uploadedImages
+            .filter(img => !img.loading && img.base64)
+            .map(img => img.base64);
+    } else {
+        imgUrl = document.getElementById("multiImageInput").value
+            .split(',')
+            .map(url => url.trim())
+            .filter(url => url);
+    }
+    
     const sizes = sizesInput.value.split(",").map(s => s.trim()).filter(s => s);
     const colors = selectedColors; // Use the selectedColors array instead
     const description = descriptionInput.value.trim();
@@ -1863,7 +2294,7 @@ window.submitProduct = async () => {
 
     if (!name || !oldPrice || !newPrice || imgUrl.length === 0) {
         if (window.FloatingAlertManager) {
-            window.alerts.warning('Name, Old Price, New Price, and at least one Image URL are required.', 'Missing Required Fields');
+            window.alerts.warning('Name, Old Price, New Price, and at least one Image are required.', 'Missing Required Fields');
         } else {
             alert("Name, Old Price, New Price, and at least one Image URL are required.");
         }
@@ -1871,15 +2302,35 @@ window.submitProduct = async () => {
     }
 
     try {
+        // Prepare product data, only include stock if it's defined
+        const productData = { 
+            name, 
+            price, 
+            oldPrice, 
+            newPrice, 
+            imgUrl, 
+            sizes, 
+            colors, 
+            description, 
+            categories 
+        };
+        
+        // Only add stock field if it's defined
+        if (stock !== undefined) {
+            productData.stock = stock;
+        }
+        
         if (editMode && editingProductId) {
-            await updateDoc(doc(db, "products", editingProductId), { name, price, oldPrice, newPrice, imgUrl, sizes, colors, description, stock, categories });
+            await updateDoc(doc(db, "products", editingProductId), productData);
             if (window.FloatingAlertManager) {
                 window.FloatingAlertManager.productUpdated();
             } else {
                 alert("Product updated successfully!");
             }
         } else {
-            await addDoc(collection(db, "products"), { name, price, oldPrice, newPrice, imgUrl, sizes, colors, description, stock, categories });
+            // Add timestamp for new products
+            productData.createdAt = new Date().toISOString();
+            await addDoc(collection(db, "products"), productData);
             if (window.FloatingAlertManager) {
                 window.FloatingAlertManager.productAdded();
             } else {
@@ -1970,8 +2421,39 @@ window.editProduct = async (id) => {
         setProductCategories(product.categories);
     }
 
-    // Set comma separated image URLs
-    document.getElementById("multiImageInput").value = (product.imgUrl || []).join(', ');
+    // Handle images - check if they're base64 or URLs
+    const images = product.imgUrl || [];
+    const hasBase64 = images.some(url => url.startsWith('data:image'));
+    
+    if (hasBase64) {
+        // Switch to file upload method and show images
+        currentUploadMethod = 'file';
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector('.tab-btn').classList.add('active');
+        document.getElementById('fileUploadSection').classList.add('active');
+        document.getElementById('urlUploadSection').classList.remove('active');
+        
+        // Load base64 images into uploaded array
+        uploadedImages = images.map((base64, index) => ({
+            id: Date.now() + index,
+            base64: base64,
+            name: `Image ${index + 1}`,
+            size: Math.round((base64.length * 3) / 4),
+            compressedSize: Math.round((base64.length * 3) / 4)
+        }));
+        updateImagePreview();
+    } else {
+        // Use URL method
+        currentUploadMethod = 'url';
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        document.getElementById('fileUploadSection').classList.remove('active');
+        document.getElementById('urlUploadSection').classList.add('active');
+        
+        document.getElementById("multiImageInput").value = images.join(', ');
+        uploadedImages = [];
+        updateImagePreview();
+    }
 
     editMode = true;
     editingProductId = id;
